@@ -25,6 +25,8 @@ function todoStrip(todo) {
     [todo.selfReviews, "Self-assessment to complete", "performance.html"],
     [todo.reviewsToWrite, "Reviews for you to write", "performance.html?tab=team"],
     [todo.expensesToReview, "Expense claims to review", "expenses.html?tab=approvals"],
+    [todo.advancesToReview, "Salary advance requests to review", "advances.html?tab=requests"],
+    [todo.advancesToPay, "Salary advances to pay out", "advances.html?tab=requests"],
     [todo.trainingDue, "Training for you to do", "training.html"],
     [todo.trainingProblems, "Training gaps in your team", "training.html?tab=compliance"],
   ].filter(([n]) => n > 0);
@@ -96,6 +98,7 @@ function selfView(d, session, extras) {
       <div class="action-row">
         <a class="btn btn-sm" href="leave.html">Request leave</a>
         <a class="btn btn-sm btn-ghost" href="expenses.html">New expense claim</a>
+        <a class="btn btn-sm btn-ghost" href="advances.html">Salary advance</a>
         <a class="btn btn-sm btn-ghost" href="payslips.html">My payslips</a>
         <a class="btn btn-sm btn-ghost" href="training.html">My training</a>
       </div>
@@ -114,7 +117,9 @@ function companyView(d, role) {
           <td>${esc(e.job_title)}</td><td>${esc(formatDate(e.date_joined))}</td></tr>`).join("")}</tbody></table></div>`
     : `<p class="muted">Hires will show here once employees have a join date.</p>`;
   const add = canManageStaff(role) ? `<a class="btn btn-sm" href="employees.html?new=1">Add employee</a>` : "";
+  const reports = canManageStaff(role) ? `<div class="toolbar"><span class="muted">Charts and totals for people, attendance, payroll, hiring and more.</span><a class="btn btn-ghost btn-sm spacer" href="reports.html">Open reports</a></div>` : "";
   return `
+    ${reports}
     <div class="stats">
       <div class="stat accent"><div class="num">${d.counts.active || 0}</div><div class="lbl">Active employees</div></div>
       <div class="stat"><div class="num">${d.outToday.length}</div><div class="lbl">Out on leave today</div>

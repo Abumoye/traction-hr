@@ -65,7 +65,8 @@ export function openModal({ title, html, narrow = false, footer = "", onClose = 
   back.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", close));
   document.body.appendChild(back);
   const first = back.querySelector("input, select, textarea, button.btn");
-  if (first) first.focus();
+  if (first) first.focus({ preventScroll: true }); // focusing a button at the bottom of a tall pop-up must not scroll its top out of view
+  back.scrollTop = 0;
   return { el: back, body: back.querySelector(".modal-body"), close };
 }
 

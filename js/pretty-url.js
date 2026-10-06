@@ -12,7 +12,7 @@ const CODE_RE = /^[a-z0-9][a-z0-9-]{2,19}$/;
 // The pages that run inside a company (everything except sign in, sign up and the public careers page).
 export const APP_PAGES = ["dashboard", "employees", "employee", "departments", "users", "account", "leave", "leave-settings",
   "attendance", "payroll", "payroll-run", "payslips", "payslip", "recruitment", "applicant", "offer", "onboarding",
-  "performance", "review", "expenses", "training", "audit"];
+  "performance", "review", "expenses", "training", "audit", "advances", "reports"];
 
 // True on the real domain and on the local test servers (ports 8787 and 8788), so the behaviour can be tried on a laptop.
 export function isPrettyHost(hostname = location.hostname, port = location.port) {

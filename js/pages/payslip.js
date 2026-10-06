@@ -43,7 +43,7 @@ async function run({ role, content }) {
           ${row("Sub total", subtotal, "sub")}${row("Bonus", p.bonus)}${row("Performance reward", p.perf_reward)}${row("Total earnings", p.gross_pay, "sub")}</div>
         <div><h3>Deductions</h3>
           ${row("Staff pension contribution", p.pension_employee)}${row("Income tax (PAYE)", p.paye)}${row("HMO / life assurance", p.hmo)}${row("NHF", p.nhf)}
-          ${row("Other deductions", p.other_deduction)}${row("Loan repayment", p.loan_repayment)}${row("Penalty" + (p.penalty_reason ? " - " + p.penalty_reason : ""), p.penalty)}
+          ${row("Other deductions", p.other_deduction)}${row("Loan / salary advance repayment", p.loan_repayment)}${row("Penalty" + (p.penalty_reason ? " - " + p.penalty_reason : ""), p.penalty)}
           ${row("Total deductions", p.total_deductions, "sub")}</div>
       </div>
       <div class="slip-net"><div><div class="muted">Net pay</div><div class="amt">${naira(p.net_pay)}</div></div><div style="max-width:420px;text-align:right">${esc(nairaInWords(p.net_pay))}</div></div>
