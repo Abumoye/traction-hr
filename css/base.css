@@ -1,0 +1,18 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--ground);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0 0 0.5em; line-height: 1.2; }
+p { margin: 0 0 1em; }
+a { color: var(--brand); }
+img { max-width: 100%; display: block; }
+[hidden] { display: none !important; }
