@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <title>Sign in | Traction Outsourcing HR</title>
+  <link rel="icon" href="assets/img/traction-icon.png">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <main class="auth">
+    <section class="auth-brand">
+      <div class="logo-card"><img src="assets/img/traction-logo.png" alt="Traction Outsourcing"></div>
+      <div>
+        <h2>People, payroll and hiring in <span class="accent">one place</span>.</h2>
+        <p>Manage employees, leave, Nigerian payroll and recruitment for your company.</p>
+      </div>
+      <p>&copy; Traction Outsourcing Limited</p>
+    </section>
+
+    <section class="auth-form-wrap">
+      <div class="auth-card">
+        <h1>Sign in</h1>
+        <p class="hint">Use the company code your administrator gave you.</p>
+
+        <div id="message" hidden></div>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="companyCode">Company code</label>
+            <input id="companyCode" name="companyCode" autocomplete="organization" required>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <button id="login-btn" class="btn btn-block" type="submit">Sign in</button>
+        </form>
+
+        <div class="auth-foot">
+          <a href="signup.html">Create a company</a>
+          <button id="test-connection" class="btn btn-ghost" type="button">Test connection</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/pages/login.js"></script>
+</body>
+</html>

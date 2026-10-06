@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <title>Create a company | Traction Outsourcing HR</title>
+  <link rel="icon" href="assets/img/traction-icon.png">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <main class="auth">
+    <section class="auth-brand">
+      <div class="logo-card"><img src="assets/img/traction-logo.png" alt="Traction Outsourcing"></div>
+      <div>
+        <h2>Set up your company in <span class="accent">minutes</span>.</h2>
+        <p>You will become the company owner and can add your team afterwards. You need the invite code from Traction Outsourcing.</p>
+      </div>
+      <p>&copy; Traction Outsourcing Limited</p>
+    </section>
+
+    <section class="auth-form-wrap">
+      <div class="auth-card">
+        <h1>Create a company</h1>
+
+        <div id="message" hidden></div>
+
+        <form id="signup-form" novalidate>
+          <div class="field">
+            <label for="inviteCode">Invite code</label>
+            <input id="inviteCode" name="inviteCode" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="companyName">Company name</label>
+            <input id="companyName" name="companyName" autocomplete="organization" required>
+          </div>
+          <div class="field">
+            <label for="companyCode">Company code</label>
+            <input id="companyCode" name="companyCode" autocomplete="off" required>
+            <div class="hint">Your staff type this to sign in. Lowercase letters, numbers and hyphens.</div>
+          </div>
+          <div class="field">
+            <label for="adminName">Your full name</label>
+            <input id="adminName" name="adminName" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="adminEmail">Your email</label>
+            <input id="adminEmail" name="adminEmail" type="email" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label for="adminPassword">Password</label>
+            <input id="adminPassword" name="adminPassword" type="password" autocomplete="new-password" required>
+            <div class="hint">At least 8 characters.</div>
+          </div>
+          <div class="field">
+            <label for="confirmPassword">Confirm password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required>
+          </div>
+          <button id="signup-btn" class="btn btn-block" type="submit">Create company</button>
+        </form>
+
+        <div class="auth-foot">
+          <a href="index.html">Back to sign in</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/pages/signup.js"></script>
+</body>
+</html>
