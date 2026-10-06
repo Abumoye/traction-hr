@@ -43,7 +43,7 @@ async function run({ role, content }) {
       ${d.status === "approved" ? `<div class="alert alert-ok">Approved by ${esc(d.approved_by)} on ${esc(formatDate(d.approved_at.slice(0, 10)))}. Payslips are visible to staff.</div>` : ""}
       ${d.status === "paid" ? `<div class="alert alert-ok">Paid on ${esc(formatDate(d.paid_on))}. This run is final.</div>` : ""}
       ${t.negative_net ? `<div class="alert alert-error">${t.negative_net} payslip${t.negative_net === 1 ? " has" : "s have"} a negative net pay (highlighted). Fix before approving.</div>` : ""}
-      <div class="stats compact">
+      <div class="stats compact money">
         <div class="stat"><div class="num">${t.employees}</div><div class="lbl">Staff paid</div></div>
         <div class="stat"><div class="num" style="font-size:22px">${naira(t.gross_pay)}</div><div class="lbl">Gross pay</div></div>
         <div class="stat"><div class="num" style="font-size:22px">${naira(t.paye)}</div><div class="lbl">PAYE to remit</div></div>

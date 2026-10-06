@@ -14,7 +14,7 @@ async function run({ role, content }) {
   const isApprover = isHr || role === "manager";
   const tabs = [{ id: "mine", label: "My claims" }];
   if (isApprover) tabs.push({ id: "approvals", label: isHr ? "All claims" : "Team claims" });
-  if (isHr) tabs.push({ id: "summary", label: "Summary and settings" });
+  if (isHr) tabs.push({ id: "summary", label: "Summary" });
   const wanted = new URLSearchParams(location.search).get("tab");
   let active = tabs.some((t) => t.id === wanted) ? wanted : "mine";
   let settings = null;

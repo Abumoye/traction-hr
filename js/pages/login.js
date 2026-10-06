@@ -8,10 +8,16 @@ const msg = document.getElementById("message");
 const btn = document.getElementById("login-btn");
 const testBtn = document.getElementById("test-connection");
 
-if (getSession()) window.location.href = "dashboard.html";
-
 const params = new URLSearchParams(location.search);
-if (params.get("company")) form.companyCode.value = params.get("company");
+let hint = "";
+try { hint = sessionStorage.getItem("tol_company_hint") || ""; } catch (e) {}
+
+// Someone already signed in goes straight to their company, unless the address named a different company.
+const existing = getSession();
+if (existing && (!params.get("company") || params.get("company").toLowerCase() === existing.company.code)) {
+  window.location.href = "dashboard.html";
+}
+if (params.get("company") || hint) form.companyCode.value = params.get("company") || hint;
 if (params.get("timeout")) showMessage(msg, "You were signed out because the page was idle for a while. Please sign in again.", "info");
 if (params.get("created")) {
   const links = params.get("company") ? companyLinks(params.get("company")) : null;

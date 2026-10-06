@@ -2,6 +2,7 @@ import { getSession, clearSession } from "./auth.js";
 import { call } from "./api.js";
 import { esc, ROLE_LABELS } from "./ui.js";
 import { IDLE_TIMEOUT_MS } from "./config.js";
+import { applyCompanyAddress } from "./pretty-url.js";
 
 const ICONS = {
   dashboard: '<path d="M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
@@ -69,6 +70,7 @@ export function initPage({ active, title }) {
     location.href = "account.html?forced=1";
     return null;
   }
+  applyCompanyAddress(session.company.code);
   const role = session.user.role;
   const app = document.getElementById("app");
   app.innerHTML = `
@@ -98,6 +100,7 @@ export function initPage({ active, title }) {
   document.getElementById("menu-btn").addEventListener("click", () => shell.classList.toggle("nav-open"));
   document.getElementById("scrim").addEventListener("click", () => shell.classList.remove("nav-open"));
   watchIdle();
+  stackWideTables();
   document.getElementById("signout").addEventListener("click", async () => {
     try { await call("logout"); } catch (e) {}
     clearSession();
@@ -105,6 +108,36 @@ export function initPage({ active, title }) {
   });
 
   return { session, role, content: document.getElementById("content") };
+}
+
+// On a phone, a table that is wider than the screen is shown as a list of cards (each cell labelled with its column name).
+function stackWideTables() {
+  const narrow = window.matchMedia("(max-width: 720px)");
+  const run = () => {
+    if (!narrow.matches) return;
+    document.querySelectorAll("table.data").forEach((table) => {
+      const wrap = table.parentElement;
+      if (!table.classList.contains("stack")) {
+        if (!wrap || wrap.scrollWidth <= wrap.clientWidth + 2) return;
+        table.classList.add("stack");
+      }
+      const heads = [...table.querySelectorAll("thead th")].map((th) => {
+        const copy = th.cloneNode(true);
+        copy.querySelectorAll(".muted, small").forEach((x) => x.remove());
+        return copy.textContent.trim();
+      });
+      table.querySelectorAll("tbody tr").forEach((tr) => {
+        [...tr.children].forEach((td, i) => { if (td.tagName === "TD" && !td.hasAttribute("data-label")) td.setAttribute("data-label", heads[i] || ""); });
+      });
+    });
+  };
+  let queued = false;
+  new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; run(); });
+  }).observe(document.body, { childList: true, subtree: true });
+  run();
 }
 
 // Signs the person out after a period of inactivity, so a forgotten screen does not stay open.

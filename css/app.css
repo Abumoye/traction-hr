@@ -313,3 +313,51 @@ tr.neg td { background: var(--danger-soft); }
 .review-section h2 { font-size: 16px; }
 .chk-list { max-height: 240px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; }
 .chk-list label { display: flex; gap: 10px; align-items: center; padding: 5px 0; font-weight: 400; margin: 0; }
+
+/* ---- Home screen tiles (employee dashboard) ---- */
+.quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.quick-tile { display: block; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.quick-tile:hover { border-color: var(--brand); }
+.quick-tile .q-lbl { color: var(--ink-soft); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.quick-tile strong { display: block; font-size: 20px; line-height: 1.2; margin-top: 6px; }
+.quick-tile .q-sub { color: var(--ink-soft); font-size: 13px; margin-top: 2px; }
+.quick-tile.accent strong { color: var(--brand); }
+.action-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.stat .num { text-align: left; }
+
+/* ---- Phones: company name under the title, tighter dashboard, wide tables become cards ---- */
+@media (max-width: 720px) {
+  .topbar { flex-wrap: wrap; row-gap: 0; }
+  .topbar h1 { flex: 1; min-width: 0; }
+  .topbar .company { display: block; flex-basis: 100%; margin: 2px 0 0; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; }
+  .todo-list { grid-template-columns: 1fr; gap: 8px; margin-bottom: 16px; }
+  .todo { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+  .todo strong { display: inline; font-size: 18px; min-width: 26px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .stats > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .stat { padding: 14px; }
+  .stat .num { font-size: 26px; }
+
+  .table-wrap:has(table.stack) { background: transparent; border: 0; border-radius: 0; overflow: visible; }
+  table.data.stack, table.data.stack tbody { display: block; width: 100%; }
+  table.data.stack thead { display: none; }
+  table.data.stack tr { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; padding: 4px 14px; }
+  table.data.stack td { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 7px 0; border-bottom: 1px dashed var(--line); text-align: right; }
+  table.data.stack tr td:last-child { border-bottom: 0; }
+  table.data.stack td:empty { display: none; }
+  table.data.stack td::before { content: attr(data-label); flex: 0 0 34%; text-align: left; color: var(--ink-soft); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  table.data.stack td[data-label=""]::before { display: none; }
+  table.data.stack td:first-child { display: block; text-align: left; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  table.data.stack td:first-child::before { display: none; }
+  table.data.stack td.num { text-align: right; }
+}
+
+@media (max-width: 720px) {
+  .stats.money { grid-template-columns: 1fr; }
+  .stats.money .stat { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .stats.money .stat .lbl { margin-top: 0; order: -1; }
+}
+
+@media (max-width: 720px) {
+  .copy-box code { flex: 1 1 100%; font-size: 12px; word-break: normal; }
+}

@@ -1,5 +1,6 @@
 import { API_URL } from "./config.js";
 import { getToken, clearSession } from "./auth.js";
+import { realPage } from "./pretty-url.js";
 
 export class ApiError extends Error {}
 
@@ -28,11 +29,11 @@ export async function call(action, data = {}) {
   if (!body.ok) {
     if (body.code === "AUTH") {
       clearSession();
-      if (!location.pathname.endsWith("index.html") && location.pathname !== "/") {
+      if (realPage() !== "index.html") {
         location.href = "index.html";
       }
     }
-    if (body.code === "MUST_CHANGE" && !location.pathname.endsWith("account.html")) {
+    if (body.code === "MUST_CHANGE" && realPage() !== "account.html") {
       location.href = "account.html?forced=1";
     }
     throw new ApiError(body.error || "Something went wrong.");
