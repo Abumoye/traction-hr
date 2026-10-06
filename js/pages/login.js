@@ -1,6 +1,7 @@
 import { call, ApiError } from "../api.js";
 import { saveSession, getSession } from "../auth.js";
 import { showMessage, hideMessage, setBusy } from "../ui.js";
+import { companyLinks } from "../pretty-url.js";
 
 const form = document.getElementById("login-form");
 const msg = document.getElementById("message");
@@ -12,7 +13,10 @@ if (getSession()) window.location.href = "dashboard.html";
 const params = new URLSearchParams(location.search);
 if (params.get("company")) form.companyCode.value = params.get("company");
 if (params.get("timeout")) showMessage(msg, "You were signed out because the page was idle for a while. Please sign in again.", "info");
-if (params.get("created")) showMessage(msg, "Company created. Sign in with the email and password you just chose.", "ok");
+if (params.get("created")) {
+  const links = params.get("company") ? companyLinks(params.get("company")) : null;
+  showMessage(msg, "Company created. Sign in with the email and password you just chose." + (links ? " Your company's sign-in link is " + links.signIn + " (share this with your staff)." : ""), "ok");
+}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();

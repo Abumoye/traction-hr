@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>Page not found | Traction Outsourcing HR</title>
+  <link rel="icon" href="/assets/img/traction-icon.png">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+  <main class="auth" style="grid-template-columns: 1fr;">
+    <section class="auth-form-wrap">
+      <div class="auth-card">
+        <div class="logo-card" style="margin-bottom: 16px;"><img src="/assets/img/traction-logo.png" alt="Traction Outsourcing" style="max-width: 180px;"></div>
+        <p id="checking" class="hint">Taking you to your company's page...</p>
+        <div id="missing" hidden>
+          <h1>Page not found</h1>
+          <p class="hint">Check the address you were given, or go to the sign-in page and type your company code.</p>
+          <div class="auth-foot"><a id="home" href="/index.html">Go to sign in</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/js/pages/not-found.js"></script>
+</body>
+</html>

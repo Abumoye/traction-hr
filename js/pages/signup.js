@@ -1,9 +1,16 @@
 import { call, ApiError } from "../api.js";
 import { showMessage, hideMessage, setBusy } from "../ui.js";
+import { PRETTY_HOST } from "../pretty-url.js";
 
 const form = document.getElementById("signup-form");
 const msg = document.getElementById("message");
 const btn = document.getElementById("signup-btn");
+
+const preview = document.getElementById("link-preview");
+const showPreview = () => { preview.textContent = PRETTY_HOST + "/" + (form.companyCode.value.trim().toLowerCase() || "your-company"); };
+form.companyCode.addEventListener("input", showPreview);
+form.companyName.addEventListener("input", () => setTimeout(showPreview));
+showPreview();
 
 let codeEdited = false;
 form.companyCode.addEventListener("input", () => { codeEdited = true; });

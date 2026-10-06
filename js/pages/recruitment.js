@@ -1,4 +1,5 @@
 import { call, ApiError } from "../api.js";
+import { companyLinks } from "../pretty-url.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, openModal, confirmDialog, toast, formatDate, tabBar, bindTabs } from "../ui.js";
 
@@ -102,7 +103,8 @@ async function run({ session, content }) {
   }
 
   function renderJobs(jobs, depts) {
-    const link = `${location.origin}${location.pathname.replace(/[^/]*$/, "")}careers.html?company=${encodeURIComponent(session.company.code)}`;
+    const pretty = companyLinks(session.company.code);
+    const link = pretty ? pretty.careers : `${location.origin}${location.pathname.replace(/[^/]*$/, "")}careers.html?company=${encodeURIComponent(session.company.code)}`;
     panel.innerHTML = `
       <div class="copy-box"><span class="muted">Careers page for candidates:</span><code id="link">${esc(link)}</code>
         <button class="btn btn-ghost btn-sm" id="copy" type="button">Copy link</button><a class="btn btn-ghost btn-sm" href="${esc(link)}" target="_blank" rel="noopener">Open</a></div>
