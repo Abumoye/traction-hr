@@ -3,6 +3,7 @@ import { call } from "./api.js";
 import { esc, ROLE_LABELS } from "./ui.js";
 import { IDLE_TIMEOUT_MS } from "./config.js";
 import { applyCompanyAddress } from "./pretty-url.js";
+import { pulse } from "./progress.js";
 
 const ICONS = {
   dashboard: '<path d="M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
@@ -105,6 +106,8 @@ export function initPage({ active, title }) {
   document.getElementById("scrim").addEventListener("click", () => shell.classList.remove("nav-open"));
   watchIdle();
   stackWideTables();
+  showOnLinkClick();
+  loading(document.getElementById("content")); // the page replaces this as soon as it has its data, so the screen is never blank
   document.getElementById("signout").addEventListener("click", async () => {
     try { await call("logout"); } catch (e) {}
     clearSession();
@@ -112,6 +115,19 @@ export function initPage({ active, title }) {
   });
 
   return { session, role, content: document.getElementById("content") };
+}
+
+// Clicking a link to another page shows the loading signs at once, instead of the old page just sitting there.
+function showOnLinkClick() {
+  document.addEventListener("click", (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest && e.target.closest("a[href]");
+    if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+    const href = a.getAttribute("href") || "";
+    if (!href || href.startsWith("#") || /^(mailto:|tel:|javascript:)/i.test(href)) return;
+    if (a.origin !== location.origin) return;
+    pulse("Opening page...");
+  });
 }
 
 // On a phone, a table that is wider than the screen is shown as a list of cards (each cell labelled with its column name).
