@@ -391,3 +391,14 @@ tr.neg td { background: var(--danger-soft); }
   .bar-row { grid-template-columns: 112px 1fr minmax(30px, auto); gap: 8px; }
   .big { font-size: 26px; }
 }
+
+/* ---- location (GPS) clock-in ---- */
+.badge.geo-ok { background: var(--ok-soft); color: var(--ok); }
+.badge.geo-attn { background: #fff4d6; color: #8a5a00; }
+.badge.geo-none { background: #ececec; color: #555; }
+.geo-cell { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; font-size: 12px; }
+.geo-cell a { color: var(--ink-soft); }
+.geo-note { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+.geo-note.warn { color: #8a5a00; }
+.site-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.site-row:first-of-type { border-top: 0; }
