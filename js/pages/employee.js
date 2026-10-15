@@ -2,6 +2,7 @@ import { call, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, cap, formatDate, initials, toast, STATUS_LABELS } from "../ui.js";
 import { openEmployeeForm } from "../employee-form.js";
+import { openLocationRules, describeRule } from "../geo-rules.js";
 
 const params = new URLSearchParams(location.search);
 const isMe = params.get("me") === "1";
@@ -62,6 +63,8 @@ async function run({ session, role, content }) {
       ${e.sensitive ? `<div class="card"><h2>Bank and statutory</h2><dl class="dl">
           ${row("Bank", e.bank_name)}${row("Account number", e.account_no)}${row("Tax ID (TIN)", e.tin)}${row("Pension PIN", e.pension_pin)}
         </dl></div>` : ""}
+      ${canWrite ? `<div class="card" id="geo-card" hidden><h2>Clock-in location</h2><p id="geo-text" class="muted" style="margin-bottom:12px"></p>
+        <button type="button" class="btn btn-ghost btn-sm" id="geo-edit">Change</button></div>` : ""}
       <div class="card" id="leave-card" hidden><h2>Leave balances (${new Date().getFullYear()})</h2><div id="leave-body"></div></div>
       <div class="card"><h2>Documents</h2>
         <div id="cv-msg" class="alert alert-error" hidden></div>
@@ -80,6 +83,15 @@ async function run({ session, role, content }) {
         openEmployeeForm({ employee: e, departments, employees, onSaved: load });
       } catch (err) { toast(err.message, "error"); }
     });
+
+    // Clock-in location rule: HR and the owner only.
+    if (canWrite) {
+      call("attendance.rulesGet", { employeeId: e.id }).then((r) => {
+        content.querySelector("#geo-text").textContent = describeRule(r);
+        content.querySelector("#geo-card").hidden = false;
+        content.querySelector("#geo-edit").addEventListener("click", () => openLocationRules({ employeeId: e.id, onSaved: load }));
+      }).catch(() => {});
+    }
 
     // Leave balances: shown only when the server allows it for this viewer.
     call("leave.balances", { employeeId: e.id }).then((r) => {
