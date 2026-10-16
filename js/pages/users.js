@@ -1,6 +1,7 @@
 import { call, ApiError } from "../api.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, openModal, toast, formatDateTime, randomPassword, ROLE_LABELS, STATUS_LABELS } from "../ui.js";
+import { showCredentials as showSignInDetails } from "../credentials.js";
 
 const page = initPage({ active: "users", title: "User access" });
 if (page) run(page);
@@ -85,18 +86,9 @@ async function run({ session, role, content }) {
       try {
         await call("users.create", { fullName: f.fullName.value, email: f.email.value, role: f.role.value, employeeId: f.employeeId.value, password });
         m.close();
-        showCredentials(f.email.value, password);
+        showSignInDetails({ name: f.fullName.value, email: f.email.value.trim().toLowerCase(), password, title: "Login created" });
         load();
       } catch (err) { const x = m.el.querySelector("#m-msg"); x.textContent = err.message; x.hidden = false; }
-    });
-  }
-
-  function showCredentials(email, password) {
-    openModal({
-      title: "Login created", narrow: true,
-      html: `<p>Give these details to the user. The password is shown only now.</p>
-        <dl class="dl" style="grid-template-columns:90px 1fr"><dt>Email</dt><dd>${esc(email)}</dd><dt>Password</dt><dd><code>${esc(password)}</code></dd></dl>`,
-      footer: `<button class="btn" data-close type="button">Done</button>`,
     });
   }
 
@@ -145,7 +137,7 @@ async function run({ session, role, content }) {
       try {
         await call("users.resetPassword", { id: u.id, newPassword: password });
         m.close();
-        showCredentials(u.email, password);
+        showSignInDetails({ name: u.full_name, email: u.email, password, title: "Password reset" });
         load();
       } catch (err) { const x = m.el.querySelector("#m-msg"); x.textContent = err.message; x.hidden = false; }
     });

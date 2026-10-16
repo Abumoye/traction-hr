@@ -209,7 +209,7 @@ async function run({ content }) {
           html: `<p><strong>${esc(name())}</strong> is now employee <strong>${esc(r.employee.employee_no)}</strong>.</p>
             <ul><li>${r.salary_recorded ? "Salary record created for payroll." : "No salary record yet. Add one under Payroll &rarr; Salaries."}</li>
             <li>${r.onboarding_tasks} onboarding tasks created.</li></ul>
-            <p class="muted">Remember to give them a login under User access when they start.</p>`,
+            <p class="muted">To let them sign in, open their profile and choose <strong>Create sign-in</strong>.</p>`,
           footer: `<a class="btn btn-ghost" href="onboarding.html?employee=${encodeURIComponent(r.employee.id)}">Open checklist</a><a class="btn" href="employee.html?id=${encodeURIComponent(r.employee.id)}">View employee</a>`,
           onClose: load,
         });
