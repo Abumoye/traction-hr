@@ -17,7 +17,7 @@ export function showCredentials({ name, email, password, title = "Sign-in detail
   const message = [
     `Hello ${first},`,
     "",
-    `Your sign-in for ${company.name} on Traction HR is ready.`,
+    `Your sign-in for ${company.name} on Traction Outsourcing HRMS is ready.`,
     "",
     `Sign in: ${address}`,
     `Company code: ${company.code}`,
