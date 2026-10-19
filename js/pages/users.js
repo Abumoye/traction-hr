@@ -8,7 +8,7 @@ if (page) run(page);
 
 async function run({ session, role, content }) {
   // Owners can assign any role; HR admins only manager/employee (the server enforces this too).
-  const assignable = role === "owner" ? ["owner", "hr_admin", "manager", "employee"] : ["manager", "employee"];
+  const assignable = role === "owner" ? ["owner", "hr_admin", "manager", "accountant", "employee"] : ["manager", "employee"];
   let users = [], employees = [];
 
   async function load() {

@@ -31,11 +31,11 @@ async function run({ role, content }) {
         <a class="btn btn-ghost btn-sm" href="payroll.html">&larr; All runs</a>
         <h2 style="margin:0">${esc(monthLabel(d.period))}</h2><span class="badge ${esc(d.status)}">${esc(STATUS_LABELS[d.status] || d.status)}</span>
         <span class="spacer" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          ${draft ? `<button class="btn btn-ghost btn-sm" id="recalc" type="button">Recalculate</button>
+          ${draft && d.can_manage ? `<button class="btn btn-ghost btn-sm" id="recalc" type="button">Recalculate</button>
             <button class="btn btn-ghost btn-sm" id="add" type="button">Add employee</button>
             <button class="btn btn-ghost btn-sm" id="del" type="button">Delete run</button>
             ${d.can_approve ? `<button class="btn btn-sm" id="approve" type="button">Approve</button>` : ""}` : ""}
-          ${d.status === "approved" ? `<button class="btn btn-sm" id="paid" type="button">Mark as paid</button>${isOwner ? `<button class="btn btn-ghost btn-sm" id="reopen" type="button">Reopen</button>` : ""}` : ""}
+          ${d.status === "approved" && d.can_manage ? `<button class="btn btn-sm" id="paid" type="button">Mark as paid</button>${isOwner ? `<button class="btn btn-ghost btn-sm" id="reopen" type="button">Reopen</button>` : ""}` : ""}
           <span class="menu-wrap"><button class="btn btn-ghost btn-sm" id="export" type="button" aria-haspopup="true">Export</button></span>
         </span>
       </div>
@@ -57,7 +57,7 @@ async function run({ role, content }) {
           <td class="num">${naira(other(l))}${l.penalty ? `<div class="muted" style="font-size:12px">${esc(l.penalty_reason)}</div>` : ""}</td>
           <td class="num"><strong>${naira(l.net_pay)}</strong></td>
           <td style="text-align:right;white-space:nowrap"><a class="btn btn-ghost btn-sm" href="payslip.html?id=${encodeURIComponent(l.id)}">Payslip</a>
-            ${draft ? `<button class="btn btn-ghost btn-sm" data-edit="${esc(l.id)}" type="button">Edit</button><button class="btn btn-ghost btn-sm" data-remove="${esc(l.id)}" type="button">Remove</button>` : ""}</td></tr>`).join("")}
+            ${draft && d.can_manage ? `<button class="btn btn-ghost btn-sm" data-edit="${esc(l.id)}" type="button">Edit</button><button class="btn btn-ghost btn-sm" data-remove="${esc(l.id)}" type="button">Remove</button>` : ""}</td></tr>`).join("")}
       </tbody></table></div>`;
 
     const on = (id, fn) => { const el = content.querySelector("#" + id); if (el) el.addEventListener("click", fn); };

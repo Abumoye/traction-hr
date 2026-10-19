@@ -2,6 +2,7 @@ import { call, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, cap, formatDate, formatDateTime, initials, toast, confirmDialog, openModal, randomPassword, ROLE_LABELS, STATUS_LABELS } from "../ui.js";
 import { showCredentials } from "../credentials.js";
+import { renderEmployeeDocuments } from "../documents-ui.js";
 import { openEmployeeForm } from "../employee-form.js";
 import { openLocationRules, describeRule } from "../geo-rules.js";
 
@@ -62,6 +63,7 @@ async function run({ session, role, content }) {
         </dl></div>
       </div>
       ${canWrite ? signInCard(e) : ""}
+      ${canWrite ? `<div class="card" id="empdocs-card"><h2>Employee documents</h2><div id="empdocs"><p class="muted">Loading...</p></div></div>` : ""}
       ${e.sensitive ? `<div class="card"><h2>Bank and statutory</h2><dl class="dl">
           ${row("Bank", e.bank_name)}${row("Account number", e.account_no)}${row("Tax ID (TIN)", e.tin)}${row("Pension PIN", e.pension_pin)}
         </dl></div>` : ""}
@@ -85,6 +87,13 @@ async function run({ session, role, content }) {
         openEmployeeForm({ employee: e, departments, employees, onSaved: load });
       } catch (err) { toast(err.message, "error"); }
     });
+
+    // Employee documents: HR and owner (upload for them, review, download; only the owner can delete).
+    if (canWrite) {
+      const loadDocs = () => call("docs.list", { employeeId: e.id }).then((data) => renderEmployeeDocuments(content.querySelector("#empdocs"), data, { mySelf: false, onChange: loadDocs }))
+        .catch((err) => { content.querySelector("#empdocs").innerHTML = `<p class="muted">${esc(err.message)}</p>`; });
+      loadDocs();
+    }
 
     // Sign-in access: HR and the owner only.
     const makeLogin = content.querySelector("#login-create");
@@ -149,7 +158,7 @@ async function run({ session, role, content }) {
   }
 
   function createLoginFor(e) {
-    const roles = role === "owner" ? ["employee", "manager", "hr_admin", "owner"] : ["employee", "manager"];
+    const roles = role === "owner" ? ["employee", "manager", "accountant", "hr_admin", "owner"] : ["employee", "manager"];
     const m = openModal({
       title: "Create sign-in", narrow: true,
       html: `<div id="m-msg" class="alert alert-error" hidden></div>

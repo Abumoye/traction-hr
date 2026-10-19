@@ -11,10 +11,11 @@ const MAX = 4 * 1024 * 1024;
 
 async function run({ role, content }) {
   const isHr = canManageStaff(role);
+  const viewAll = isHr || role === "accountant"; // HR, the owner and the accountant see every claim and can record payment
   const isApprover = isHr || role === "manager";
   const tabs = [{ id: "mine", label: "My claims" }];
-  if (isApprover) tabs.push({ id: "approvals", label: isHr ? "All claims" : "Team claims" });
-  if (isHr) tabs.push({ id: "summary", label: "Summary" });
+  if (isApprover || viewAll) tabs.push({ id: "approvals", label: viewAll ? "All claims" : "Team claims" });
+  if (viewAll) tabs.push({ id: "summary", label: "Summary" });
   const wanted = new URLSearchParams(location.search).get("tab");
   let active = tabs.some((t) => t.id === wanted) ? wanted : "mine";
   let settings = null;
@@ -108,11 +109,11 @@ async function run({ role, content }) {
   function renderApprovals(list) {
     const payable = list.filter((x) => x.status === "approved");
     panel.innerHTML = `
-      <div class="toolbar"><span class="muted">${isHr ? "Every claim in the company." : `Claims from your team. You can approve up to ${naira(settings.manager_limit, 0)}; larger claims go to HR.`}</span>
+      <div class="toolbar"><span class="muted">${viewAll ? "Every claim in the company." : `Claims from your team. You can approve up to ${naira(settings.manager_limit, 0)}; larger claims go to HR.`}</span>
         <select id="status" class="spacer" aria-label="Filter by status">${[["submitted", "Waiting for approval"], ["approved", "Approved, to be paid"], ["paid", "Paid"], ["rejected", "Rejected"], ["cancelled", "Cancelled"], ["", "All"]].map(([v, l]) => `<option value="${v}"${v === status ? " selected" : ""}>${l}</option>`).join("")}</select>
-        ${isHr && status === "approved" && payable.length ? `<button class="btn btn-sm" id="pay" type="button">Mark selected as paid</button>` : ""}</div>
-      ${list.length ? `<div class="table-wrap"><table class="data"><thead><tr>${isHr && status === "approved" ? '<th><input type="checkbox" id="all" aria-label="Select all"></th>' : ""}<th>Employee</th><th>Claim</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
-        ${list.map((x) => `<tr>${isHr && status === "approved" ? `<td><input type="checkbox" data-pick="${esc(x.id)}" aria-label="Select"></td>` : ""}
+        ${viewAll && status === "approved" && payable.length ? `<button class="btn btn-sm" id="pay" type="button">Mark selected as paid</button>` : ""}</div>
+      ${list.length ? `<div class="table-wrap"><table class="data"><thead><tr>${viewAll && status === "approved" ? '<th><input type="checkbox" id="all" aria-label="Select all"></th>' : ""}<th>Employee</th><th>Claim</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+        ${list.map((x) => `<tr>${viewAll && status === "approved" ? `<td><input type="checkbox" data-pick="${esc(x.id)}" aria-label="Select"></td>` : ""}
           <td><strong>${esc(x.employee_name)}</strong><div class="muted">${esc(formatDate(x.date))}</div></td>
           <td>${esc(x.description)}<div class="muted">${esc(x.category)}</div></td><td class="num"><strong>${naira(x.amount)}</strong></td>
           <td>${badge(x.status)}${x.needs_hr ? '<div class="muted" style="font-size:12px">Above your limit: HR must approve</div>' : ""}${x.decision_note ? `<div class="muted" style="font-size:12px">${esc(x.decision_note)}</div>` : ""}</td>
@@ -181,14 +182,15 @@ async function run({ role, content }) {
           <button class="btn btn-ghost btn-sm" id="all" type="button">${allTime ? "Show a month" : "Show all time"}</button></div>
         <div class="two-col"><div class="card"><h2>By status (${sum.claims} claims)</h2><table class="data"><thead><tr><th>Status</th><th class="num">Claims</th><th class="num">Amount</th></tr></thead><tbody>${rows(sum.by_status)}</tbody></table></div>
           <div class="card"><h2>Approved and paid, by category</h2><table class="data"><thead><tr><th>Category</th><th class="num">Claims</th><th class="num">Amount</th></tr></thead><tbody>${rows(sum.by_category)}</tbody></table></div></div>
-        <div class="card" style="max-width:560px"><h2>Rules</h2><div id="s-msg" hidden></div><form id="set-form" novalidate>
+        ${isHr ? `<div class="card" style="max-width:560px"><h2>Rules</h2><div id="s-msg" hidden></div><form id="set-form" novalidate>
           <div class="field"><label for="s-rc">A receipt is required from (&#8358;)</label><input id="s-rc" name="receipt_above" inputmode="decimal" value="${s.receipt_above}"><div class="hint">Use 0 to require a receipt on every claim.</div></div>
           <div class="field"><label for="s-lim">Managers can approve up to (&#8358;)</label><input id="s-lim" name="manager_limit" inputmode="decimal" value="${s.manager_limit}"><div class="hint">Larger claims wait for HR or the owner. Use 0 so only HR approves.</div></div>
-          <button class="btn" type="submit">Save rules</button></form></div>`;
+          <button class="btn" type="submit">Save rules</button></form></div>` : ""}`;
       panel.querySelector("#prev").addEventListener("click", () => { month = shiftMonth(month, -1); summaryTab(); });
       panel.querySelector("#next").addEventListener("click", () => { month = shiftMonth(month, 1); summaryTab(); });
       panel.querySelector("#all").addEventListener("click", () => { allTime = !allTime; summaryTab(); });
-      panel.querySelector("#set-form").addEventListener("submit", async (ev) => {
+      const setForm = panel.querySelector("#set-form");
+      if (setForm) setForm.addEventListener("submit", async (ev) => {
         ev.preventDefault();
         const msg = panel.querySelector("#s-msg");
         msg.hidden = true;

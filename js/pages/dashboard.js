@@ -27,6 +27,10 @@ function todoStrip(todo) {
     [todo.expensesToReview, "Expense claims to review", "expenses.html?tab=approvals"],
     [todo.advancesToReview, "Salary advance requests to review", "advances.html?tab=requests"],
     [todo.advancesToPay, "Salary advances to pay out", "advances.html?tab=requests"],
+    [todo.expensesToPay, "Approved expense claims to pay", "expenses.html?tab=approvals"],
+    [todo.invoicesOverdue, "Invoices and bills overdue", "finance.html?tab=invoices"],
+    [todo.documentsToReview, "Documents to review", "documents.html?tab=review"],
+    [todo.documentsNeeded, "Documents for you to upload", "documents.html?tab=mine"],
     [todo.trainingDue, "Training for you to do", "training.html"],
     [todo.trainingProblems, "Training gaps in your team", "training.html?tab=compliance"],
   ].filter(([n]) => n > 0);

@@ -10,10 +10,12 @@ const LABEL = { submitted: "Waiting for approval", approved: "Approved, to be pa
 
 async function run({ session, role, content }) {
   const isHr = canManageStaff(role);
+  const canSee = isHr || role === "accountant"; // the accountant sees every request and records the payout; deciding stays with HR
   const linked = !!session.user.employeeId;
   const tabs = [];
   if (linked || !isHr) tabs.push({ id: "mine", label: "My advance" });
-  if (isHr) tabs.push({ id: "requests", label: "Requests" }, { id: "rules", label: "Rules" });
+  if (canSee) tabs.push({ id: "requests", label: "Requests" });
+  if (isHr) tabs.push({ id: "rules", label: "Rules" });
   const wanted = new URLSearchParams(location.search).get("tab");
   let active = tabs.some((t) => t.id === wanted) ? wanted : tabs[0].id;
 

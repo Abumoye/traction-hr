@@ -6,8 +6,9 @@ import { naira } from "../money.js";
 const page = initPage({ active: "payroll", title: "Payroll" });
 if (page) run(page);
 
-async function run({ content }) {
-  const tabs = [{ id: "runs", label: "Payroll runs" }, { id: "salaries", label: "Salaries" }, { id: "settings", label: "Settings" }];
+async function run({ role, content }) {
+  const canManage = role === "owner" || role === "hr_admin"; // the accountant reads payroll (every run, salary and payslip) but cannot change it
+  const tabs = [{ id: "runs", label: "Payroll runs" }, { id: "salaries", label: "Salaries" }].concat(canManage ? [{ id: "settings", label: "Settings" }] : []);
   let active = new URLSearchParams(location.search).get("tab");
   if (!tabs.some((t) => t.id === active)) active = "runs";
   content.innerHTML = `<div id="tabs">${tabBar(tabs, active)}</div><div id="panel"></div>`;
@@ -32,16 +33,17 @@ async function run({ content }) {
 
   function renderRuns(runs) {
     panel.innerHTML = `
-      <div class="toolbar"><span class="muted">One payroll run per month. Build it, adjust it, then approve it to publish payslips.</span>
-        <button class="btn spacer" id="new-run" type="button">New payroll run</button></div>
+      <div class="toolbar"><span class="muted">${canManage ? "One payroll run per month. Build it, adjust it, then approve it to publish payslips." : "Every payroll run. You can read all of them and open any payslip; changes are made by HR."}</span>
+        ${canManage ? `<button class="btn spacer" id="new-run" type="button">New payroll run</button>` : ""}</div>
       ${runs.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Month</th><th>Status</th><th class="num">Staff</th><th class="num">Gross pay</th><th class="num">PAYE</th><th class="num">Net pay</th><th>Created by</th></tr></thead><tbody>
         ${runs.map((r) => `<tr class="click" data-href="payroll-run.html?id=${encodeURIComponent(r.id)}">
           <td><strong>${esc(monthLabel(r.period))}</strong></td><td><span class="badge ${esc(r.status)}">${esc(STATUS_LABELS[r.status] || r.status)}</span></td>
           <td class="num">${r.totals.employees}</td><td class="num">${naira(r.totals.gross_pay)}</td><td class="num">${naira(r.totals.paye)}</td>
           <td class="num"><strong>${naira(r.totals.net_pay)}</strong></td><td class="muted">${esc(r.created_by)}</td></tr>`).join("")}</tbody></table></div>`
-        : `<div class="card empty">No payroll runs yet. Make sure salaries are set on the <strong>Salaries</strong> tab, then start a new run.</div>`}`;
+        : `<div class="card empty">${canManage ? "No payroll runs yet. Make sure salaries are set on the <strong>Salaries</strong> tab, then start a new run." : "No payroll runs yet. HR will start one when salaries are ready."}</div>`}`;
     rowLinks(panel);
-    panel.querySelector("#new-run").addEventListener("click", newRun);
+    const nr = panel.querySelector("#new-run");
+    if (nr) nr.addEventListener("click", newRun);
   }
 
   function newRun() {
@@ -86,13 +88,13 @@ async function run({ content }) {
   function renderSalaries(list) {
     const missing = list.filter((r) => !r.has_salary).length;
     panel.innerHTML = `
-      <div class="toolbar"><span class="muted">Monthly gross salary and tax details for each employee. A change applies from its effective date.</span></div>
+      <div class="toolbar"><span class="muted">Monthly gross salary and tax details for each employee.${canManage ? " A change applies from its effective date." : " Read only."}</span></div>
       ${missing ? `<div class="alert alert-info">${missing} employee${missing === 1 ? " has" : "s have"} no salary record yet and will not be paid in a run.</div>` : ""}
       ${list.length ? `<div class="table-wrap"><table class="data"><thead><tr><th>Employee</th><th class="num">Monthly gross</th><th class="num">Annual rent</th><th class="num">NHF</th><th class="num">HMO / life</th><th>From</th><th></th></tr></thead><tbody>
         ${list.map((r) => `<tr><td><strong>${esc(r.name)}</strong><div class="muted">${esc(r.employee_no)}${r.job_title ? " &middot; " + esc(r.job_title) : ""}</div></td>
           ${r.has_salary ? `<td class="num"><strong>${naira(r.monthly_gross)}</strong></td><td class="num">${naira(r.annual_rent)}</td><td class="num">${naira(r.nhf_monthly)}</td><td class="num">${naira(r.hmo_monthly)}</td><td>${esc(formatDate(r.effective_from))}</td>`
             : `<td colspan="5"><span class="badge pending">No salary record</span></td>`}
-          <td style="text-align:right"><button class="btn btn-ghost btn-sm" data-sal="${esc(r.employee_id)}" type="button">${r.has_salary ? "Change" : "Set salary"}</button></td></tr>`).join("")}</tbody></table></div>`
+          <td style="text-align:right">${canManage ? `<button class="btn btn-ghost btn-sm" data-sal="${esc(r.employee_id)}" type="button">${r.has_salary ? "Change" : "Set salary"}</button>` : ""}</td></tr>`).join("")}</tbody></table></div>`
         : `<div class="card empty">Add employees first.</div>`}`;
     panel.querySelectorAll("[data-sal]").forEach((b) => b.addEventListener("click", () => editSalary(list.find((r) => r.employee_id === b.dataset.sal))));
   }

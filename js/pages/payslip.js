@@ -16,7 +16,7 @@ async function run({ role, content }) {
   } catch (err) {
     return errorBox(content, err instanceof ApiError ? err.message : "Could not load this payslip.");
   }
-  const isHr = role === "owner" || role === "hr_admin";
+  const isHr = role === "owner" || role === "hr_admin" || role === "accountant"; // they reach a payslip from a payroll run
   document.title = `Payslip ${p.employee_name} ${p.period} | Traction Outsourcing HR`;
   const row = (label, amount, cls = "") => `<div class="slip-row ${cls}"><span>${esc(label)}</span><span class="num">${amount === null ? "" : naira(amount)}</span></div>`;
   const subtotal = p.basic + p.housing + p.transport + p.utility + p.meal;
