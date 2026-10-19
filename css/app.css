@@ -75,6 +75,7 @@ table.data tbody tr.click:hover { background: var(--brand-soft); }
 .badge.suspended, .badge.inactive { background: var(--danger-soft); color: var(--danger); }
 .badge.terminated { background: #ececec; color: #666; }
 .badge.owner { background: var(--ink); color: #fff; }
+.badge.accountant { background: #e4eefc; color: #1b4f9c; }
 .badge.hr_admin { background: var(--brand-soft); color: var(--brand-hover); }
 
 /* Detail lists */
@@ -413,3 +414,18 @@ tr.neg td { background: var(--danger-soft); }
 .geo-note.warn { color: #8a5a00; }
 .site-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .site-row:first-of-type { border-top: 0; }
+/* a tick box with its words beside it, inside a form field (plain .field input would stretch the box to full width) */
+.field label.check { display: flex; gap: 10px; align-items: center; font-weight: 600; }
+.field label.check input { width: 18px; height: 18px; padding: 0; flex: none; accent-color: var(--brand); }
+
+/* employee documents and finance */
+.badge.doc-pending { background: #fff4d6; color: #8a5a00; }
+.badge.doc-approved { background: var(--ok-soft); color: var(--ok); }
+.badge.doc-rejected { background: var(--danger-soft); color: var(--danger); }
+.badge.doc-missing { background: #ececec; color: #555; }
+.doc-reason { color: var(--danger); font-size: 13px; margin-top: 3px; }
+.muted-row { opacity: 0.6; }
+.badge.fin-open { background: #e4eefc; color: #1b4f9c; }
+.badge.fin-overdue { background: var(--danger-soft); color: var(--danger); }
+.badge.fin-paid { background: var(--ok-soft); color: var(--ok); }
+.badge.fin-void { background: #ececec; color: #555; }
