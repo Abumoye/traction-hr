@@ -23,7 +23,7 @@ export function openEmployeeForm({ employee, departments, employees, onSaved }) 
   // Owner and HR can make a login together with a new employee. HR may give manager or employee access; only the owner can give more.
   const viewerRole = (getSession() || { user: {} }).user.role;
   const canLogin = isNew && (viewerRole === "owner" || viewerRole === "hr_admin");
-  const loginRoles = viewerRole === "owner" ? ["employee", "manager", "hr_admin", "owner"] : ["employee", "manager"];
+  const loginRoles = viewerRole === "owner" ? ["employee", "manager", "accountant", "hr_admin", "owner"] : ["employee", "manager"];
 
   const m = openModal({
     title: isNew ? "Add employee" : "Edit employee",
@@ -50,7 +50,7 @@ export function openEmployeeForm({ employee, departments, employees, onSaved }) 
 
       ${canLogin ? `
       <div class="form-section">Sign-in access</div>
-      <div class="field full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="f-login" checked> Let this person sign in to the HR system</label>
+      <div class="field full"><label class="check"><input type="checkbox" id="f-login" checked> Let this person sign in to the HR system</label>
         <div class="hint">They sign in with the work email above. After you save, you will see a temporary password to give them; they choose their own the first time, and their profile is already set up.</div></div>
       <div class="field" id="f-role-wrap"><label for="f-role">Access level</label><select id="f-role">${loginRoles.map((r) => `<option value="${r}">${esc(ROLE_LABELS[r])}</option>`).join("")}</select></div>` : ""}
 

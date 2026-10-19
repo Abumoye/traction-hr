@@ -23,11 +23,11 @@ export async function openLocationRules({ employeeId, onSaved }) {
     html: `<div id="m-msg" class="alert alert-error" hidden></div>
       ${r.mode === "off" ? `<div class="alert alert-info">The company's location check is switched off, so this takes effect only when it is switched on (Attendance &gt; Team &gt; Location check).</div>` : ""}
       <form id="rule-form" novalidate>
-        <div class="field"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="r-exempt" name="exempt"${r.exempt ? " checked" : ""}> Exempt from the location check</label>
+        <div class="field"><label class="check"><input type="checkbox" id="r-exempt" name="exempt"${r.exempt ? " checked" : ""}> Exempt from the location check</label>
           <div class="hint">Their location is never asked for or stored. Use it for drivers, sales staff or anyone who works away from a fixed place. They can also clock in as remote when the company blocks remote clock-in.</div></div>
         <div id="r-sites">
           <div class="field"><label>Work sites they can clock in at</label>
-            ${r.sites.length ? r.sites.map((s) => `<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" name="site" value="${esc(s.id)}"${r.site_ids.includes(s.id) ? " checked" : ""}> ${esc(s.name)}</label>`).join("")
+            ${r.sites.length ? r.sites.map((s) => `<label class="check" style="margin:4px 0"><input type="checkbox" name="site" value="${esc(s.id)}"${r.site_ids.includes(s.id) ? " checked" : ""}> ${esc(s.name)}</label>`).join("")
               : `<p class="muted">The company has no work sites yet. Add them under Attendance &gt; Team &gt; Location check.</p>`}
             <div class="hint">Leave all unticked to allow every work site.</div></div>
         </div>

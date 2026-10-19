@@ -18,6 +18,8 @@ const ICONS = {
   audit: '<path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
   performance: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   advances: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M15 15h3"/>',
+  documents: '<path d="M3 6h6l2 2h10v11H3z"/><path d="M8 13h8"/>',
+  finance: '<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.500 10v8M14.500 10v8M19 10v8M3 20h18"/>',
   reports: '<path d="M4 4v16h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/>',
   expenses: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
   training: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.500 3 3 6 3s6-1.500 6-3v-5"/>',
@@ -28,7 +30,7 @@ const ICONS = {
   leaveSettings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
 };
 
-const ALL = ["owner", "hr_admin", "manager", "employee"];
+const ALL = ["owner", "hr_admin", "manager", "accountant", "employee"];
 const NAV = [
   { id: "dashboard", label: "Dashboard", href: "dashboard.html", roles: ALL },
   { id: "employees", label: "Employees", href: "employees.html", roles: ["owner", "hr_admin", "manager"] },
@@ -36,16 +38,18 @@ const NAV = [
   { id: "departments", label: "Departments", href: "departments.html", roles: ["owner", "hr_admin"] },
   { id: "leave", label: "Leave", href: "leave.html", roles: ALL },
   { id: "attendance", label: "Attendance", href: "attendance.html", roles: ALL },
+  { id: "documents", label: "Documents", href: "documents.html", roles: ALL },
   { id: "payslips", label: "My payslips", href: "payslips.html", roles: ALL },
   { id: "performance", label: "Performance", href: "performance.html", roles: ALL },
   { id: "expenses", label: "Expenses", href: "expenses.html", roles: ALL },
   { id: "advances", label: "Salary advance", href: "advances.html", roles: ALL },
   { id: "training", label: "Training", href: "training.html", roles: ALL },
-  { section: "Administration", roles: ["owner", "hr_admin"] },
+  { section: "Administration", roles: ["owner", "hr_admin", "accountant"] },
   { id: "reports", label: "Reports", href: "reports.html", roles: ["owner", "hr_admin"] },
   { id: "recruitment", label: "Recruitment", href: "recruitment.html", roles: ["owner", "hr_admin"] },
   { id: "onboarding", label: "Onboarding", href: "onboarding.html", roles: ["owner", "hr_admin"] },
-  { id: "payroll", label: "Payroll", href: "payroll.html", roles: ["owner", "hr_admin"] },
+  { id: "payroll", label: "Payroll", href: "payroll.html", roles: ["owner", "hr_admin", "accountant"] },
+  { id: "finance", label: "Finance", href: "finance.html", roles: ["owner", "accountant"] },
   { id: "leaveSettings", label: "Leave settings", href: "leave-settings.html", roles: ["owner", "hr_admin"] },
   { id: "users", label: "User access", href: "users.html", roles: ["owner", "hr_admin"] },
   { id: "audit", label: "Audit and backups", href: "audit.html", roles: ["owner"] },

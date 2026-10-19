@@ -119,7 +119,7 @@ export function initials(name) {
   return String(name || "?").trim().split(/\s+/).slice(0, 2).map((p) => p[0] || "").join("").toUpperCase() || "?";
 }
 
-export const ROLE_LABELS = { owner: "Owner", hr_admin: "HR Admin", manager: "Manager", employee: "Employee" };
+export const ROLE_LABELS = { owner: "Owner", hr_admin: "HR Admin", manager: "Manager", accountant: "Accountant", employee: "Employee" };
 export const STATUS_LABELS = {
   active: "Active", "on-leave": "On leave", suspended: "Suspended", terminated: "Terminated", inactive: "Inactive",
   pending: "Pending", approved: "Approved", rejected: "Rejected", cancelled: "Cancelled", draft: "Draft", paid: "Paid",
