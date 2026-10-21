@@ -11,14 +11,15 @@ export const timing = { last: null };
 
 // Apps Script web apps answer cross-origin requests only for "simple" requests,
 // so we POST JSON as text/plain (no preflight) and parse it on the server.
-export async function call(action, data = {}) {
+// opts.quiet: no loading bar and no timing entry (used by the notification bell's background checks).
+export async function call(action, data = {}, opts = {}) {
   if (!API_URL) {
     throw new ApiError("The backend is not connected yet. Set PRODUCTION_API_URL in js/config.js after deploying the Apps Script.");
   }
   let res;
   let body;
   const started = performance.now();
-  begin(); // shows the loading signs (progress.js) until the answer is back
+  if (!opts.quiet) begin(); // shows the loading signs (progress.js) until the answer is back
   try {
     try {
       res = await fetch(API_URL, {
@@ -35,9 +36,9 @@ export async function call(action, data = {}) {
       throw new ApiError("The server sent an unexpected response.");
     }
   } finally {
-    end();
+    if (!opts.quiet) end();
   }
-  timing.last = { action, total: Math.round(performance.now() - started), server: typeof body.ms === "number" ? body.ms : null };
+  if (!opts.quiet) timing.last = { action, total: Math.round(performance.now() - started), server: typeof body.ms === "number" ? body.ms : null };
   if (!body.ok) {
     if (body.code === "AUTH") {
       clearSession();

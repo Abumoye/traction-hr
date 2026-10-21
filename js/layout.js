@@ -4,6 +4,7 @@ import { esc, ROLE_LABELS } from "./ui.js";
 import { IDLE_TIMEOUT_MS } from "./config.js";
 import { applyCompanyAddress } from "./pretty-url.js";
 import { pulse } from "./progress.js";
+import { startBell } from "./bell.js";
 
 const ICONS = {
   dashboard: '<path d="M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
@@ -19,6 +20,7 @@ const ICONS = {
   performance: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   advances: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M15 15h3"/>',
   documents: '<path d="M3 6h6l2 2h10v11H3z"/><path d="M8 13h8"/>',
+  announcements: '<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15 9a4 4 0 010 6M17.500 6.500a8 8 0 010 11"/>',
   finance: '<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.500 10v8M14.500 10v8M19 10v8M3 20h18"/>',
   reports: '<path d="M4 4v16h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/>',
   expenses: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
@@ -33,6 +35,7 @@ const ICONS = {
 const ALL = ["owner", "hr_admin", "manager", "accountant", "employee"];
 const NAV = [
   { id: "dashboard", label: "Dashboard", href: "dashboard.html", roles: ALL },
+  { id: "announcements", label: "Announcements", href: "announcements.html", roles: ALL },
   { id: "employees", label: "Employees", href: "employees.html", roles: ["owner", "hr_admin", "manager"] },
   { id: "profile", label: "My profile", href: "employee.html?me=1", roles: ["employee"] },
   { id: "departments", label: "Departments", href: "departments.html", roles: ["owner", "hr_admin"] },
@@ -99,6 +102,7 @@ export function initPage({ active, title }) {
           <button type="button" class="menu-btn" id="menu-btn" aria-label="Open menu">Menu</button>
           <h1>${esc(title)}</h1>
           <span class="company">${esc(session.company.name)}</span>
+          ${session.mustChange ? "" : `<a class="bell" id="bell" href="notifications.html" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1112 0v5l1.500 2h-15z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="bell-badge" id="bell-badge" hidden>0</span></a>`}
         </header>
         <main class="content" id="content"></main>
       </div>
@@ -108,6 +112,7 @@ export function initPage({ active, title }) {
   const shell = document.getElementById("shell");
   document.getElementById("menu-btn").addEventListener("click", () => shell.classList.toggle("nav-open"));
   document.getElementById("scrim").addEventListener("click", () => shell.classList.remove("nav-open"));
+  if (!session.mustChange) startBell();
   watchIdle();
   stackWideTables();
   showOnLinkClick();
