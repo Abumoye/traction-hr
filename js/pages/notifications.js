@@ -2,6 +2,7 @@ import { call, ApiError } from "../api.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, toast, formatDateTime, tabBar, bindTabs } from "../ui.js";
 import { setBellCount } from "../bell.js";
+import { pushState, enablePush, disablePush, sendTest, registerWorker } from "../push.js";
 
 const page = initPage({ active: "notifications", title: "Notifications" });
 if (page) run(page);
@@ -16,6 +17,45 @@ function ago(iso) {
   if (mins < 60 * 24) return `${Math.round(mins / 60)} h ago`;
   if (mins < 60 * 48) return "Yesterday";
   return formatDateTime(iso);
+}
+
+// "Phone alerts" card: turn alerts on or off for THIS device, and send a test.
+async function phoneAlerts(host) {
+  await registerWorker();
+  const state = await pushState();
+  const copy = {
+    on: ["Phone alerts are on for this device.", "You get a pop-up, vibration and sound here even when the app is closed. The sound and vibration follow this phone's own notification settings."],
+    off: ["Get alerts on this device", "Turn them on to get a pop-up, vibration and sound when something needs you, even when the app is closed. You can turn them off here at any time."],
+    install: ["Get alerts on your iPhone", "Apple only allows alerts for apps on the Home Screen. In Safari tap the Share button, choose Add to Home Screen, then open the app from your Home Screen, sign in and come back to this page to turn alerts on. (iOS 16.4 or newer.)"],
+    blocked: ["Alerts are blocked on this device", "Allow notifications for this site in your browser or phone settings, then reload this page."],
+    unsupported: ["This browser cannot show phone alerts", "Try Chrome on an Android phone, or Safari on an iPhone after adding the app to the Home Screen."],
+  }[state];
+  host.innerHTML = `<div class="card phone-card"><h2>${esc(copy[0])}</h2><p class="muted">${esc(copy[1])}</p>
+    <div class="action-row">${state === "off" ? `<button class="btn" id="pa-on" type="button">Turn on phone alerts</button>` : ""}
+      ${state === "on" ? `<button class="btn btn-ghost" id="pa-test" type="button">Send me a test</button><button class="btn btn-ghost" id="pa-off" type="button">Turn off on this device</button>` : ""}</div></div>`;
+  const again = () => phoneAlerts(host);
+  const on = host.querySelector("#pa-on");
+  if (on) on.addEventListener("click", async () => {
+    on.disabled = true;
+    try { await enablePush(); toast("Phone alerts are on for this device."); } catch (err) { toast(err.message, "error"); }
+    again();
+  });
+  const off = host.querySelector("#pa-off");
+  if (off) off.addEventListener("click", async () => {
+    off.disabled = true;
+    try { await disablePush(); toast("Phone alerts are off for this device."); } catch (err) { toast(err.message, "error"); }
+    again();
+  });
+  const test = host.querySelector("#pa-test");
+  if (test) test.addEventListener("click", async () => {
+    test.disabled = true;
+    try {
+      const r = await sendTest();
+      if (r.sent > 0) toast("Test sent. It should appear on your phone in a few seconds.");
+      else toast("The test could not be delivered. Please try again in a minute.", "error");
+    } catch (err) { toast(err.message, "error"); }
+    test.disabled = false;
+  });
 }
 
 async function run({ role, content }) {
@@ -39,7 +79,7 @@ async function run({ role, content }) {
     try {
       const data = await call("notifications.list", { unread: onlyUnread });
       setBellCount(data.unread);
-      panel.innerHTML = `<div class="toolbar">
+      panel.innerHTML = `<div id="phone-alerts"></div><div class="toolbar">
           <label class="check"><input type="checkbox" id="only"${onlyUnread ? " checked" : ""}> Unread only</label>
           <span class="muted">${data.unread ? `${data.unread} unread` : "You are all caught up."}</span>
           ${data.unread ? `<button class="btn btn-ghost btn-sm spacer" id="all" type="button">Mark all as read</button>` : ""}
@@ -52,6 +92,7 @@ async function run({ role, content }) {
             </a></li>`).join("")}</ul>
           <p class="hint">Notifications appear on this page only. Nothing is sent by email. Old ones are cleared automatically after a few weeks.</p>`
           : `<div class="card empty">${onlyUnread ? "No unread notifications." : "Nothing here yet. Requests, approvals, reminders and announcements will show up as they happen."}</div>`}`;
+      phoneAlerts(panel.querySelector("#phone-alerts"));
       panel.querySelector("#only").addEventListener("change", (ev) => { onlyUnread = ev.target.checked; inboxTab(); });
       const all = panel.querySelector("#all");
       if (all) all.addEventListener("click", async () => {
