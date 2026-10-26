@@ -4,7 +4,8 @@ import { esc, ROLE_LABELS } from "./ui.js";
 import { IDLE_TIMEOUT_MS } from "./config.js";
 import { applyCompanyAddress } from "./pretty-url.js";
 import { pulse } from "./progress.js";
-import { startBell } from "./bell.js";
+import { startBell, startPhoneAlerts } from "./bell.js";
+import { deviceOff } from "./push.js";
 
 const ICONS = {
   dashboard: '<path d="M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
@@ -104,6 +105,7 @@ export function initPage({ active, title }) {
           <span class="company">${esc(session.company.name)}</span>
           ${session.mustChange ? "" : `<a class="bell" id="bell" href="notifications.html" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1112 0v5l1.500 2h-15z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="bell-badge" id="bell-badge" hidden>0</span></a>`}
         </header>
+        <div class="push-bar" id="push-bar" hidden></div>
         <main class="content" id="content"></main>
       </div>
     </div>`;
@@ -112,12 +114,13 @@ export function initPage({ active, title }) {
   const shell = document.getElementById("shell");
   document.getElementById("menu-btn").addEventListener("click", () => shell.classList.toggle("nav-open"));
   document.getElementById("scrim").addEventListener("click", () => shell.classList.remove("nav-open"));
-  if (!session.mustChange) startBell();
+  if (!session.mustChange) { startBell(); startPhoneAlerts(); }
   watchIdle();
   stackWideTables();
   showOnLinkClick();
   loading(document.getElementById("content")); // the page replaces this as soon as it has its data, so the screen is never blank
   document.getElementById("signout").addEventListener("click", async () => {
+    await deviceOff(); // this phone stops getting this person's alerts
     try { await call("logout"); } catch (e) {}
     clearSession();
     location.href = "index.html";
@@ -175,6 +178,7 @@ function watchIdle() {
   const reset = () => {
     clearTimeout(timer);
     timer = setTimeout(async () => {
+      await deviceOff();
       try { await call("logout"); } catch (e) {}
       clearSession();
       location.href = "index.html?timeout=1";
