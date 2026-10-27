@@ -178,7 +178,7 @@ function watchIdle() {
   const reset = () => {
     clearTimeout(timer);
     timer = setTimeout(async () => {
-      await deviceOff();
+      // idle sign-out protects the screen; it leaves phone alerts on (only the Sign out button turns them off)
       try { await call("logout"); } catch (e) {}
       clearSession();
       location.href = "index.html?timeout=1";
