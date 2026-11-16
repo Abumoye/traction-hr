@@ -21,7 +21,7 @@ function run({ session, content }) {
     </div>
     <div class="card" style="max-width:520px">
       <h2>Speed check</h2>
-      <p class="muted">If pages feel slow, this shows whether the wait is your internet connection, Google's servers, or the system's own work.</p>
+      <p class="muted">If pages feel slow, this shows whether the wait is your internet connection, the connection to the system, or the system's own work.</p>
       <div id="speed-out" aria-live="polite"></div>
       <button class="btn btn-ghost btn-sm" id="speed-btn" type="button">Run speed check</button>
     </div>
@@ -92,7 +92,7 @@ async function speedCheck(btn, out) {
     ];
     const verdict = [];
     if (site.total > 1500) verdict.push("Your internet connection looks slow: even a small file from the website takes " + secs(site.total) + ". Every page loads several files, so this alone makes everything feel slow.");
-    if (ping.total > 2000) verdict.push("Google's servers take about " + secs(ping.total) + " to answer even an empty request. Every action in the app pays this once. It comes from Google and the distance to it, not from the work the system does.");
+    if (ping.total > 2000) verdict.push("The connection to the system takes about " + secs(ping.total) + " to answer even an empty request. Every action in the app pays this once. It comes from the connection and the distance to the system, not from the work the system does.");
     if (me.server !== null && me.server > 1000) verdict.push("The system itself spent " + secs(me.server) + " working on that request, which is longer than it should. Please tell Traction Outsourcing.");
     if (!verdict.length) verdict.push("Nothing here looks unusually slow. If a page still feels slow, it may be asking for a lot of data: tell us which page.");
     out.innerHTML = `<dl class="dl" style="grid-template-columns:1fr auto;margin-bottom:10px">${lines.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
