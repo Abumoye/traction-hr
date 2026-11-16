@@ -14,7 +14,7 @@ export const timing = { last: null };
 // opts.quiet: no loading bar and no timing entry (used by the notification bell's background checks).
 export async function call(action, data = {}, opts = {}) {
   if (!API_URL) {
-    throw new ApiError("The backend is not connected yet. Set PRODUCTION_API_URL in js/config.js after deploying the Apps Script.");
+    throw new ApiError("ERROR: Contact Administrator.");
   }
   let res;
   let body;
@@ -33,7 +33,7 @@ export async function call(action, data = {}, opts = {}) {
     try {
       body = await res.json();
     } catch (e) {
-      throw new ApiError("The server sent an unexpected response.");
+      throw new ApiError("ERROR: Contact Administrator.");
     }
   } finally {
     if (!opts.quiet) end();
@@ -49,7 +49,7 @@ export async function call(action, data = {}, opts = {}) {
     if (body.code === "MUST_CHANGE" && realPage() !== "account.html") {
       location.href = "account.html?forced=1";
     }
-    throw new ApiError(body.error || "Something went wrong.");
+    throw new ApiError(body.error || "ERROR: Contact Administrator.");
   }
   return body.data;
 }

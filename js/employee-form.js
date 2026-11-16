@@ -1,10 +1,12 @@
 import { call, ApiError } from "./api.js";
-import { esc, openModal, toast, randomPassword, ROLE_LABELS } from "./ui.js";
+import { esc, openModal, toast, randomPassword, todayLagos, ROLE_LABELS } from "./ui.js";
 import { getSession } from "./auth.js";
 import { showCredentials } from "./credentials.js";
 
 const TYPES = [["full-time", "Full-time"], ["part-time", "Part-time"], ["contract", "Contract"], ["intern", "Intern"]];
 const STATUSES = [["active", "Active"], ["on-leave", "On leave"], ["suspended", "Suspended"], ["terminated", "Terminated"]];
+const ARRANGEMENTS = [["", "Not set"], ["on-site", "On-site"], ["hybrid", "Hybrid"], ["remote", "Remote"]];
+const EXIT_REASONS = [["", "Choose a reason"], ["resignation", "Resignation"], ["dismissal", "Dismissal"], ["end-of-contract", "End of contract"], ["retirement", "Retirement"], ["redundancy", "Redundancy"], ["mutual-agreement", "Mutual agreement"], ["death", "Death"], ["other", "Other"]];
 const GENDERS = [["", "Not specified"], ["female", "Female"], ["male", "Male"], ["other", "Other"]];
 
 const options = (list, selected) =>
@@ -45,8 +47,13 @@ export function openEmployeeForm({ employee, departments, employees, onSaved }) 
       <div class="field"><label for="f-title">Job title</label><input id="f-title" name="job_title" value="${esc(e.job_title)}" maxlength="100"></div>
       <div class="field"><label for="f-mgr">Reports to</label><select id="f-mgr" name="manager_id">${options(mgrOptions, e.manager_id || "")}</select></div>
       <div class="field"><label for="f-type">Employment type</label><select id="f-type" name="employment_type">${options(TYPES, e.employment_type || "full-time")}</select></div>
+      <div class="field"><label for="f-arr">Work arrangement</label><select id="f-arr" name="work_arrangement">${options(ARRANGEMENTS, e.work_arrangement || "")}</select></div>
       <div class="field"><label for="f-joined">Date joined</label><input id="f-joined" name="date_joined" type="date" value="${esc(e.date_joined)}"></div>
       <div class="field"><label for="f-status">Status</label><select id="f-status" name="status">${options(STATUSES, e.status || "active")}</select></div>
+      <div class="form-section" data-exit>Leaving the company</div>
+      <div class="field" data-exit><label class="required" for="f-exit">Last working day</label><input id="f-exit" name="exit_date" type="date" value="${esc(e.exit_date || "")}"></div>
+      <div class="field" data-exit><label class="required" for="f-reason">Reason for leaving</label><select id="f-reason" name="exit_reason">${options(EXIT_REASONS, e.exit_reason || "")}</select></div>
+      <div class="field full" data-exit><label for="f-exitnotes">Exit notes</label><textarea id="f-exitnotes" name="exit_notes" rows="2" maxlength="500">${esc(e.exit_notes || "")}</textarea><div class="hint">For example handover, notice served, or exit interview. Only HR and the owner can see this.</div></div>
 
       ${canLogin ? `
       <div class="form-section">Sign-in access</div>
@@ -69,6 +76,15 @@ export function openEmployeeForm({ employee, departments, employees, onSaved }) 
   const msg = m.el.querySelector("#form-msg");
   const saveBtn = m.el.querySelector("#emp-save");
   const loginTick = m.el.querySelector("#f-login");
+  const statusSel = m.el.querySelector("#f-status");
+  const showExit = () => {
+    const leaving = statusSel.value === "terminated";
+    m.el.querySelectorAll("[data-exit]").forEach((el) => { el.hidden = !leaving; });
+    const day = m.el.querySelector("#f-exit");
+    if (leaving && !day.value) day.value = todayLagos();
+  };
+  statusSel.addEventListener("change", showExit);
+  showExit();
   if (loginTick) loginTick.addEventListener("change", () => { m.el.querySelector("#f-role-wrap").hidden = !loginTick.checked; });
 
   form.addEventListener("submit", async (ev) => {
@@ -77,6 +93,12 @@ export function openEmployeeForm({ employee, departments, employees, onSaved }) 
     const data = {};
     new FormData(form).forEach((v, k) => { data[k] = v; });
     if (!isNew) data.id = e.id;
+    if (data.status === "terminated" && (!String(data.exit_date || "").trim() || !String(data.exit_reason || "").trim())) {
+      msg.textContent = "Enter the last working day and the reason for leaving.";
+      msg.hidden = false;
+      msg.scrollIntoView({ block: "nearest" });
+      return;
+    }
     let password = "";
     const loginBox = m.el.querySelector("#f-login");
     if (loginBox && loginBox.checked) {
@@ -102,7 +124,7 @@ export function openEmployeeForm({ employee, departments, employees, onSaved }) 
         onSaved(saved);
       }
     } catch (err) {
-      msg.textContent = err instanceof ApiError ? err.message : "Something went wrong.";
+      msg.textContent = err instanceof ApiError ? err.message : "ERROR: Contact Administrator.";
       msg.hidden = false;
       msg.scrollIntoView({ block: "nearest" });
       saveBtn.disabled = false;
