@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, openModal, toast, formatDate, tabBar, bindTabs, STATUS_LABELS, monthLabel, thisMonth, rowLinks } from "../ui.js";
 import { naira } from "../money.js";
@@ -25,7 +25,7 @@ async function run({ role, content }) {
   async function runsTab() {
     loading(panel);
     try {
-      renderRuns(await call("payroll.runsList"));
+      await loadFast([["payroll.runsList", {}]], ([runs]) => renderRuns(runs));
     } catch (err) {
       errorBox(panel, err instanceof ApiError ? err.message : "Could not load payroll runs.");
     }
@@ -152,6 +152,7 @@ async function run({ role, content }) {
     loading(panel);
     try {
       renderSettings(await call("payroll.settingsGet"));
+      await attendanceCard();
     } catch (err) {
       errorBox(panel, err instanceof ApiError ? err.message : "Could not load settings.");
     }
@@ -209,6 +210,50 @@ async function run({ role, content }) {
       const data = {};
       new FormData(f).forEach((v, k) => { data[k] = v; });
       try { await call("payroll.settingsSave", data); toast("Settings saved."); }
+      catch (err) { msg.className = "alert alert-error"; msg.textContent = err.message; msg.hidden = false; }
+    });
+  }
+
+  // Lateness and days with no clock-in: what they cost on the payslip. Sits under the salary settings.
+  async function attendanceCard() {
+    const [a, people] = await Promise.all([call("payroll.attendanceGet"), call("employees.list")]);
+    const canSave = role === "owner" || role === "hr_admin";
+    const hour = (a.hours_per_day || 8);
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.maxWidth = "760px";
+    card.innerHTML = `
+      <h2>Lateness and days with no clock-in</h2>
+      <p class="muted" style="margin-top:0">A day's pay is the monthly gross salary divided by the days in that month. Everything below comes off <strong>before tax</strong>, so PAYE and pension are worked out on the pay actually earned. Each payslip shows the amount with its explanation, and you can change or waive it on a draft payslip.</p>
+      <div id="a-msg" hidden></div>
+      <form id="att-form" novalidate>
+        <fieldset class="field"><legend>When someone arrives late</legend>
+          <label class="check"><input type="radio" name="late_rule" value="none"${a.late_rule === "none" ? " checked" : ""}> Do nothing <span class="muted">(the default)</span></label>
+          <label class="check"><input type="radio" name="late_rule" value="half_day"${a.late_rule === "half_day" ? " checked" : ""}> Deduct half a day's salary for each late day</label>
+          <label class="check"><input type="radio" name="late_rule" value="hourly"${a.late_rule === "hourly" ? " checked" : ""}> Deduct an hour's salary for each hour of lateness</label>
+          <div class="hint">Late means clocking in after ${esc(a.work_start)} plus the ${esc(a.grace_minutes)}-minute grace period (set under Attendance). With the hourly rule the lateness is counted from ${esc(a.work_start)}, and being even one minute into an hour costs that whole hour. An hour is a day's pay divided by the ${hour} working hours of a day (${esc(a.work_start)} to ${esc(a.work_end)}), and one day never costs more than a day's pay.</div></fieldset>
+        <div class="field"><label class="check"><input type="checkbox" name="absence_rule"${a.absence_rule === "deduct" ? " checked" : ""}> A working day with no clock-in loses that whole day's pay</label>
+          <div class="hint">Weekends, public holidays and approved leave are never counted. People with no sign-in to the system cannot clock in, so they are never charged.</div></div>
+        <div class="field" style="max-width:300px"><label for="a-from">Count from (optional)</label><input id="a-from" name="attendance_from" type="date" value="${esc(a.attendance_from)}">
+          <div class="hint">Days before this date are never counted. Days before anyone in the company first clocked in are never counted either.</div></div>
+        <fieldset class="field"><legend>Never charged (for example directors, or staff who work away and do not clock in)</legend>
+          <div class="check-grid">${people.filter((e) => e.status !== "terminated").sort((x, y) => (x.first_name + x.last_name).localeCompare(y.first_name + y.last_name))
+            .map((e) => `<label class="check"><input type="checkbox" name="exempt" value="${esc(e.id)}"${a.exempt.includes(e.id) ? " checked" : ""}> ${esc(e.first_name + " " + e.last_name)}</label>`).join("")}</div></fieldset>
+        ${canSave ? `<button class="btn" id="att-save" type="submit">Save these rules</button>` : `<p class="muted">Only HR and the owner can change these.</p>`}
+      </form>`;
+    const first = panel.querySelector(".card");
+    if (first) first.after(card); else panel.appendChild(card);
+    const f = card.querySelector("#att-form");
+    if (!canSave) f.querySelectorAll("input").forEach((i) => { i.disabled = true; });
+    f.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const msg = card.querySelector("#a-msg");
+      msg.hidden = true;
+      const body = {
+        late_rule: f.late_rule.value, absence_rule: f.absence_rule.checked ? "deduct" : "none", attendance_from: f.attendance_from.value,
+        exempt: [...f.querySelectorAll("input[name=exempt]:checked")].map((i) => i.value),
+      };
+      try { await call("payroll.attendanceSave", body); toast("Saved. They apply to payroll runs from now on; recalculate a draft run to apply them to it."); }
       catch (err) { msg.className = "alert alert-error"; msg.textContent = err.message; msg.hidden = false; }
     });
   }

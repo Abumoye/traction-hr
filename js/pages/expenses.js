@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, openModal, confirmDialog, toast, formatDate, tabBar, bindTabs, fileToBase64, saveBase64, todayLagos, thisMonth, shiftMonth, monthLabel } from "../ui.js";
 import { naira } from "../money.js";
@@ -35,9 +35,7 @@ async function run({ role, content }) {
   async function mineTab() {
     loading(panel);
     try {
-      const [r, s] = await Promise.all([call("expenses.mine"), call("expenses.settingsGet")]);
-      settings = s;
-      render(r);
+      await loadFast([["expenses.mine", {}], ["expenses.settingsGet", {}]], ([r, s]) => { settings = s; render(r); });
     } catch (err) { fail(err, "Could not load your claims."); }
   }
 

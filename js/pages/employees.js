@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, cap, formatDate, initials, rowLinks, STATUS_LABELS } from "../ui.js";
 import { openEmployeeForm } from "../employee-form.js";
@@ -9,13 +9,15 @@ if (page) run(page);
 async function run({ role, content }) {
   const canWrite = canManageStaff(role);
   loading(content);
-  let employees, departments;
+  let opened = false;
   try {
-    [employees, departments] = await Promise.all([call("employees.list"), call("departments.list")]);
+    await loadFast([["employees.list", {}], ["departments.list", {}]], ([employees, departments]) => draw(employees, departments));
   } catch (err) {
-    return errorBox(content, err instanceof ApiError ? err.message : "Could not load employees.");
+    errorBox(content, err instanceof ApiError ? err.message : "Could not load employees.");
   }
+  return;
 
+  function draw(employees, departments) {
   content.innerHTML = `
     <div class="toolbar">
       <div class="grow"><input id="q" type="search" placeholder="Search by name, number, email or job title" aria-label="Search employees"></div>
@@ -70,5 +72,6 @@ async function run({ role, content }) {
   });
   const addBtn = content.querySelector("#add");
   if (addBtn) addBtn.addEventListener("click", open);
-  if (canWrite && new URLSearchParams(location.search).get("new")) open();
+  if (!opened && canWrite && new URLSearchParams(location.search).get("new")) { opened = true; open(); }
+  }
 }

@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, toast, formatDateTime, tabBar, bindTabs } from "../ui.js";
 import { setBellCount } from "../bell.js";
@@ -77,7 +77,7 @@ async function run({ role, content }) {
   async function inboxTab() {
     loading(panel);
     try {
-      const data = await call("notifications.list", { unread: onlyUnread });
+      await loadFast([["notifications.list", { unread: onlyUnread }]], ([data]) => {
       setBellCount(data.unread);
       panel.innerHTML = `<div id="phone-alerts"></div><div class="toolbar">
           <label class="check"><input type="checkbox" id="only"${onlyUnread ? " checked" : ""}> Unread only</label>
@@ -104,7 +104,8 @@ async function run({ role, content }) {
         const dest = a.getAttribute("href");
         try { if (!a.dataset.read) await call("notifications.markRead", { ids: [a.dataset.id] }); } catch (err) { /* opening the page matters more */ }
         if (dest && dest !== "#") location.href = dest; else inboxTab();
-      }));
+      }));});
+
     } catch (err) { fail(err, "Could not load your notifications."); }
   }
 

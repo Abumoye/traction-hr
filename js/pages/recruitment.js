@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { companyLinks } from "../pretty-url.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, openModal, confirmDialog, toast, formatDate, tabBar, bindTabs } from "../ui.js";
@@ -27,8 +27,7 @@ async function run({ session, content }) {
   async function pipelineTab() {
     loading(panel);
     try {
-      const [jobs, apps] = await Promise.all([call("recruitment.jobsList"), call("recruitment.applicantsList", { jobId: jobFilter })]);
-      renderPipeline(jobs, apps);
+      await loadFast([["recruitment.jobsList", {}], ["recruitment.applicantsList", { jobId: jobFilter }]], ([jobs, apps]) => renderPipeline(jobs, apps));
     } catch (err) {
       errorBox(panel, err instanceof ApiError ? err.message : "Could not load applicants.");
     }

@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, formatDate, monthLabel } from "../ui.js";
 import { naira } from "../money.js";
@@ -43,8 +43,7 @@ const card = (title, body, note = "") => `<div class="card report"><h2>${esc(tit
 async function run({ content }) {
   loading(content);
   try {
-    const r = await call("reports.get");
-    content.innerHTML = view(r);
+    await loadFast([["reports.get", {}]], ([r]) => { content.innerHTML = view(r); });
   } catch (err) {
     errorBox(content, err instanceof ApiError ? err.message : "Could not load the reports.");
   }

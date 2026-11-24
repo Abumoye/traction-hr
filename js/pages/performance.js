@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, openModal, confirmDialog, toast, formatDate, tabBar, bindTabs, stars } from "../ui.js";
 
@@ -34,7 +34,7 @@ async function run({ session, role, content }) {
   async function mineTab() {
     loading(panel);
     try {
-      const r = await call("performance.reviewsMine");
+      await loadFast([["performance.reviewsMine", {}]], ([r]) => {
       if (!r.linked) { panel.innerHTML = `<div class="card"><h2>Your login is not linked to an employee record</h2><p class="muted">Ask HR to link it so your reviews can appear here.</p></div>`; return; }
       panel.innerHTML = r.reviews.length
         ? `<div class="table-wrap"><table class="data"><thead><tr><th>Review</th><th>Status</th><th>Result</th><th></th></tr></thead><tbody>
@@ -42,7 +42,8 @@ async function run({ session, role, content }) {
             <td><span class="badge ${esc(v.status)}">${esc(STATUS[v.status])}</span>${v.status === "completed" && !v.acknowledged ? ' <span class="badge pending">Please acknowledge</span>' : ""}</td>
             <td>${v.final_rating ? `<span class="stars">${stars(v.final_rating)}</span>` : '<span class="muted">Not ready</span>'}</td>
             <td style="text-align:right"><a class="btn btn-sm${v.status === "self" && v.cycle_status === "open" ? "" : " btn-ghost"}" href="review.html?id=${encodeURIComponent(v.id)}">${v.status === "self" && v.cycle_status === "open" ? "Complete self-assessment" : "Open"}</a></td></tr>`).join("")}</tbody></table></div>`
-        : `<div class="card empty">No reviews yet. They appear here when HR starts a review cycle.</div>`;
+        : `<div class="card empty">No reviews yet. They appear here when HR starts a review cycle.</div>`;});
+
     } catch (err) { fail(err, "Could not load your reviews."); }
   }
 

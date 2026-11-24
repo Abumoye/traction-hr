@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, openModal, confirmDialog, toast, formatDate, tabBar, bindTabs, todayLagos, monthLabel } from "../ui.js";
 import { naira } from "../money.js";
@@ -53,7 +53,7 @@ async function run({ session, role, content }) {
   // ---------------------------------------------------------------- my advance
   async function mineTab() {
     loading(panel);
-    try { renderMine(await call("advances.mine")); } catch (err) { fail(err, "Could not load your salary advances."); }
+    try { await loadFast([["advances.mine", {}]], ([r]) => renderMine(r)); } catch (err) { fail(err, "Could not load your salary advances."); }
   }
 
   function renderMine(r) {

@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, formatDate, initials, rowLinks, STATUS_LABELS } from "../ui.js";
 import { naira } from "../money.js";
@@ -9,10 +9,12 @@ if (page) run(page);
 async function run({ session, role, content }) {
   loading(content);
   try {
-    const d = await call("dashboard.get");
-    const extras = d.scope === "self" && d.profile ? await loadHomeData() : null;
-    content.innerHTML = todoStrip(d.todo) + (d.scope === "self" ? selfView(d, session, extras) : companyView(d, role));
-    rowLinks(content);
+    await loadFast([["dashboard.get", {}]], async ([d]) => {
+      // the home tiles come in the same answer; older answers (before an update) fall back to asking for them
+      const extras = d.scope === "self" && d.profile ? (d.home || await loadHomeData()) : null;
+      content.innerHTML = todoStrip(d.todo) + (d.scope === "self" ? selfView(d, session, extras) : companyView(d, role));
+      rowLinks(content);
+    });
   } catch (err) {
     errorBox(content, err instanceof ApiError ? err.message : "Could not load the dashboard.");
   }

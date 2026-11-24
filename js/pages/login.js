@@ -3,6 +3,10 @@ import { saveSession, getSession } from "../auth.js";
 import { showMessage, hideMessage, setBusy } from "../ui.js";
 import { companyLinks } from "../pretty-url.js";
 
+// Wake the server while the person types: the first request after a quiet spell can take several seconds, and sign-in is the one
+// that must not.
+call("ping", {}, { quiet: true }).catch(() => {});
+
 const form = document.getElementById("login-form");
 const msg = document.getElementById("message");
 const btn = document.getElementById("login-btn");

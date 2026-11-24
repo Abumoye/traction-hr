@@ -20,6 +20,7 @@ function table(head, rows, empty) {
 const section = (title, body, note = "", actions = "") => `<section class="card sf-card"><div class="sf-card-head"><h2>${esc(title)}</h2>${actions}</div>${note ? `<p class="muted sf-note">${note}</p>` : ""}${body}</section>`;
 const tile = (num, lbl, tone = "") => `<div class="stat ${tone}"><div class="num">${esc(num)}</div><div class="lbl">${esc(lbl)}</div></div>`;
 const chips = (items, cap_ = 0) => items.length ? `<div class="sf-chips">${items.map((x) => `<span>${esc(d(x))}</span>`).join("")}</div>${cap_ && items.length >= cap_ ? `<p class="muted sf-note">Only the most recent ${cap_} are listed here. The Excel download lists them all.</p>` : ""}` : "";
+const ROLE_NAMES = { manager: "Manager", hr: "HR manager", owner: "Owner" };
 const badge = (cls, text) => `<span class="badge ${esc(cls)}">${esc(text)}</span>`;
 
 async function run({ role, content }) {
@@ -308,7 +309,7 @@ async function run({ role, content }) {
 
     const payBlock = section("Pay and money",
       `${table(["Salary from", "Monthly gross", "Set by"], pay.salary.map((x) => [esc(d(x.effective_from)), esc(naira(x.monthly_gross, 0)), esc(x.set_by)]), "No salary record.")}
-       ${pay.payslips.count ? `<h3 class="sf-sub">Paid through payroll (${esc(d(pay.payslips.first + "-01"))} to ${esc(d(pay.payslips.last + "-01"))})</h3>${table(["Year", "Months", "Gross pay", "Net pay", "PAYE"], [...pay.payslips.by_year.map((y) => [esc(y.year), String(y.months), esc(naira(y.gross, 0)), esc(naira(y.net, 0)), esc(naira(y.paye, 0))]), [`<strong>All years</strong>`, `<strong>${pay.payslips.count}</strong>`, `<strong>${esc(naira(pay.payslips.gross, 0))}</strong>`, `<strong>${esc(naira(pay.payslips.net, 0))}</strong>`, `<strong>${esc(naira(pay.payslips.paye, 0))}</strong>`]], "")}` : `<p class="muted">No approved payroll run includes this person.</p>`}
+       ${pay.payslips.count ? `<h3 class="sf-sub">Paid through payroll (${esc(d(pay.payslips.first + "-01"))} to ${esc(d(pay.payslips.last + "-01"))})</h3>${table(["Year", "Months", "Gross pay", "Net pay", "PAYE", ...(pay.payslips.attendance ? ["Lost to lateness and no clock-in"] : [])], [...pay.payslips.by_year.map((y) => [esc(y.year), String(y.months), esc(naira(y.gross, 0)), esc(naira(y.net, 0)), esc(naira(y.paye, 0)), ...(pay.payslips.attendance ? [esc(naira(y.attendance, 0))] : [])]), [`<strong>All years</strong>`, `<strong>${pay.payslips.count}</strong>`, `<strong>${esc(naira(pay.payslips.gross, 0))}</strong>`, `<strong>${esc(naira(pay.payslips.net, 0))}</strong>`, `<strong>${esc(naira(pay.payslips.paye, 0))}</strong>`, ...(pay.payslips.attendance ? [`<strong>${esc(naira(pay.payslips.attendance, 0))}</strong>`] : [])]], "")}` : `<p class="muted">No approved payroll run includes this person.</p>`}
        ${pay.advances.length ? `<h3 class="sf-sub">Salary advances</h3>${table(["Requested", "Amount", "Status", "Repaid", "Balance"], pay.advances.map((x) => [esc(d((x.requested_at || "").slice(0, 10))), esc(naira(x.amount, 0)), badge(x.status, STATUS_LABELS[x.status] || cap(x.status)), esc(naira(x.repaid_total, 0)), x.balance ? esc(naira(x.balance, 0)) : ""]), "")}` : ""}
        ${pay.expenses.count ? `<p class="sf-note">Expense claims: ${pay.expenses.count} claim${pay.expenses.count === 1 ? "" : "s"} totalling ${esc(naira(pay.expenses.claimed, 0))}; ${esc(naira(pay.expenses.paid, 0))} paid${pay.expenses.rejected ? `, ${esc(naira(pay.expenses.rejected, 0))} rejected` : ""}.</p>` : ""}`,
       "Visible to the owner and HR only.");
@@ -317,6 +318,16 @@ async function run({ role, content }) {
       `${f.hiring ? `<dl class="dl"><dt>Applied</dt><dd>${esc(d((f.hiring.applied_at || "").slice(0, 10)))} for ${esc(f.hiring.job || "a job")}</dd><dt>Found us through</dt><dd>${esc(f.hiring.source) || '<span class="muted">Not recorded</span>'}</dd>
         ${f.hiring.offer ? `<dt>Offer</dt><dd>${esc(f.hiring.offer.job_title)}, starting ${esc(d(f.hiring.offer.start_date))}${f.hiring.offer.probation_months ? `, ${esc(f.hiring.offer.probation_months)}-month probation` : ""}${f.hiring.offer.reports_to ? `, reporting to ${esc(f.hiring.offer.reports_to)}` : ""}</dd>` : ""}</dl>` : ""}
        ${f.onboarding.total ? `<p>Onboarding tasks completed: <strong>${f.onboarding.done} of ${f.onboarding.total}</strong></p>` : ""}`) : "";
+
+    const em = f.emergency || { sent: [], received: [] };
+    const choice = (p) => (p.response ? `<span class="badge ${p.response === "acknowledged" ? "approved" : "cancelled"}">${p.response === "acknowledged" ? "Acknowledged" : "Dismissed"}</span><div class="muted">${esc(formatDateTime(p.responded_at))}</div>` : '<span class="badge pending">Still waiting</span>');
+    const emergency = section("Medical emergency messages",
+      em.sent.length || em.received.length ? `
+        ${em.sent.length ? `<h3 class="sf-sub">Sent by this person</h3>${em.sent.map((m) => `<div class="em-sent"><div><strong>${esc(formatDateTime(m.created_at))}</strong>${m.location ? ` <span class="muted">&middot; ${esc(m.location)}</span>` : ""}</div><p>${esc(m.message)}</p>
+          ${table(["Told", "Received (first on screen)", "Chose"], m.recipients.map((p) => [esc(p.name) + `<div class="muted">${esc(ROLE_NAMES[p.kind] || p.kind)}</div>`, p.seen_at ? esc(formatDateTime(p.seen_at)) : '<span class="muted">Not yet</span>', choice(p)]), "")}</div>`).join("")}` : ""}
+        ${em.received.length ? `<h3 class="sf-sub">Sent to this person</h3>${table(["From", "Message", "Sent", "Received", "Chose"], em.received.map((x) => [esc(x.from), (x.location ? `<em>At ${esc(x.location)}.</em> ` : "") + esc(x.message), esc(formatDateTime(x.sent_at)), x.seen_at ? esc(formatDateTime(x.seen_at)) : '<span class="muted">Not yet</span>', choice(x)]), "")}` : ""}`
+        : `<p class="muted">No medical emergency messages sent or received.</p>`,
+      "Received means the first time the message reached the person's screen.");
 
     const records = section("HR record log",
       f.hr_records.length ? `<ul class="sf-records">${f.hr_records.map((r) => `<li class="${r.voided ? "voided" : ""}"><div><strong>${esc(r.title)}</strong> ${badge(r.kind === "commendation" ? "approved" : r.kind === "note" ? "no-record" : "late", RECORD_LABELS[r.kind] || r.kind)} ${r.voided ? badge("cancelled", "Voided") : ""}</div>
@@ -331,7 +342,7 @@ async function run({ role, content }) {
         <dt>Tax ID (TIN)</dt><dd>${esc(p.tin) || '<span class="muted">Not recorded</span>'}</dd><dt>Pension PIN</dt><dd>${esc(p.pension_pin) || '<span class="muted">Not recorded</span>'}</dd>
         <dt>Sign-in</dt><dd>${f.login.length ? f.login.map((u) => `${esc(u.email)}, ${esc(u.role)}, ${esc(u.status)}; last signed in ${esc(formatDateTime(u.last_login))}`).join("<br>") : '<span class="muted">No login</span>'}</dd></dl>`);
 
-    return `${top}<div class="sf">${standout}${history}${team}${where}${attendance}${leave}${docs}${training}${perf}${payBlock}${hiring}${records}${personal}</div>
+    return `${top}<div class="sf">${standout}${history}${team}${where}${attendance}${leave}${docs}${training}${perf}${payBlock}${hiring}${emergency}${records}${personal}</div>
       <p class="muted sf-foot">Prepared ${esc(d(f.today))} by ${esc(f.generated_by)} from the company's HR records. Confidential: for the owner and HR only.</p>`;
   }
 

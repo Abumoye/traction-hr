@@ -42,18 +42,21 @@ async function run({ role, content }) {
       ${draft ? `<div class="alert alert-info">This run is a draft: staff cannot see their payslips yet. ${d.can_approve ? "Check the figures, then approve it." : "Another person (the owner or a different HR admin) must approve it."}</div>` : ""}
       ${d.status === "approved" ? `<div class="alert alert-ok">Approved by ${esc(d.approved_by)} on ${esc(formatDate(d.approved_at.slice(0, 10)))}. Payslips are visible to staff.</div>` : ""}
       ${d.status === "paid" ? `<div class="alert alert-ok">Paid on ${esc(formatDate(d.paid_on))}. This run is final.</div>` : ""}
+      ${t.attendance_people && draft ? `<div class="alert alert-info">Attendance deductions apply to ${t.attendance_people} ${t.attendance_people === 1 ? "person" : "people"}, ${naira(t.attendance_deductions)} in all (lateness and days with no clock-in). Each payslip explains its own. Use <strong>Edit</strong> on a payslip to change or waive it. Rules are in Payroll &gt; Settings.</div>` : ""}
       ${t.negative_net ? `<div class="alert alert-error">${t.negative_net} payslip${t.negative_net === 1 ? " has" : "s have"} a negative net pay (highlighted). Fix before approving.</div>` : ""}
       <div class="stats compact money">
         <div class="stat"><div class="num">${t.employees}</div><div class="lbl">Staff paid</div></div>
         <div class="stat"><div class="num" style="font-size:22px">${naira(t.gross_pay)}</div><div class="lbl">Gross pay</div></div>
         <div class="stat"><div class="num" style="font-size:22px">${naira(t.paye)}</div><div class="lbl">PAYE to remit</div></div>
         <div class="stat"><div class="num" style="font-size:22px">${naira(t.pension_employee + t.pension_employer)}</div><div class="lbl">Pension (${naira(t.pension_employee, 0)} + ${naira(t.pension_employer, 0)} employer)</div></div>
+        ${t.attendance_deductions ? `<div class="stat"><div class="num" style="font-size:22px">${naira(t.attendance_deductions)}</div><div class="lbl">Attendance deductions (${t.attendance_people} ${t.attendance_people === 1 ? "person" : "people"})</div></div>` : ""}
         <div class="stat accent"><div class="num" style="font-size:22px">${naira(t.net_pay)}</div><div class="lbl">Net pay</div></div>
       </div>
-      <div class="table-wrap"><table class="data"><thead><tr><th>Employee</th><th class="num">Days</th><th class="num">Gross pay</th><th class="num">Pension</th><th class="num">PAYE</th><th class="num">Other deductions</th><th class="num">Net pay</th><th></th></tr></thead><tbody>
+      <div class="table-wrap"><table class="data"><thead><tr><th>Employee</th><th class="num">Days</th><th class="num">Gross pay</th><th class="num">Pension</th><th class="num">PAYE</th><th class="num">Attendance</th><th class="num">Other deductions</th><th class="num">Net pay</th><th></th></tr></thead><tbody>
         ${d.lines.map((l) => `<tr class="${l.net_pay < 0 ? "neg" : ""}"><td><strong>${esc(l.employee_name)}</strong><div class="muted">${esc(l.employee_no)}${l.job_title ? " &middot; " + esc(l.job_title) : ""}</div></td>
           <td class="num">${l.days_worked}/${l.days_in_month}</td><td class="num">${naira(l.gross_pay)}${l.bonus + l.perf_reward ? `<div class="muted" style="font-size:12px">incl. ${naira(l.bonus + l.perf_reward)} bonus</div>` : ""}</td>
           <td class="num">${naira(l.pension_employee)}</td><td class="num">${naira(l.paye)}</td>
+          <td class="num">${l.late_deduction + l.absence_deduction ? `${naira(l.late_deduction + l.absence_deduction)}<div class="muted" style="font-size:12px">${[l.absent_days ? l.absent_days + " absent" : "", l.late_count && l.late_deduction ? l.late_count + " late" : ""].filter(Boolean).join(", ")}${l.attendance_manual ? " (set by HR)" : ""}</div>` : "-"}</td>
           <td class="num">${naira(other(l))}${l.penalty ? `<div class="muted" style="font-size:12px">${esc(l.penalty_reason)}</div>` : ""}</td>
           <td class="num"><strong>${naira(l.net_pay)}</strong></td>
           <td style="text-align:right;white-space:nowrap"><a class="btn btn-ghost btn-sm" href="payslip.html?id=${encodeURIComponent(l.id)}">Payslip</a>
@@ -138,6 +141,10 @@ async function run({ role, content }) {
             <div class="field"></div>
             <div class="field"><label for="l-bonus">Bonus (&#8358;)</label><input id="l-bonus" name="bonus" inputmode="decimal" value="${l.bonus}"></div>
             <div class="field"><label for="l-perf">Performance reward (&#8358;)</label><input id="l-perf" name="perf_reward" inputmode="decimal" value="${l.perf_reward}"></div>
+            <div class="form-section">Attendance</div>
+            <div class="field"><label for="l-abs">Days with no clock-in</label><input id="l-abs" name="absent_days" inputmode="numeric" value="${l.absent_days}"><div class="hint">Each costs a day's pay (${naira(l.monthly_gross / l.days_in_month)}). Set 0 to waive.</div></div>
+            <div class="field"><label for="l-late">Lateness deduction (&#8358;)</label><input id="l-late" name="late_deduction" inputmode="decimal" value="${l.late_deduction}"><div class="hint">Set 0 to waive. Taken off before tax.</div></div>
+            ${l.attendance_note ? `<div class="field full"><div class="muted" style="font-size:13px">${esc(l.attendance_note)}</div></div>` : ""}
             <div class="form-section">Deductions</div>
             <div class="field"><label for="l-nhf">NHF (&#8358;)</label><input id="l-nhf" name="nhf" inputmode="decimal" value="${l.nhf}"></div>
             <div class="field"><label for="l-hmo">HMO / life assurance (&#8358;)</label><input id="l-hmo" name="hmo" inputmode="decimal" value="${l.hmo}"></div>
@@ -154,6 +161,9 @@ async function run({ role, content }) {
       const f = ev.target;
       const patch = { runId, lineId: l.id };
       ["days_worked", "bonus", "perf_reward", "nhf", "hmo", "loan_repayment", "other_deduction", "penalty", "penalty_reason"].forEach((k) => { patch[k] = f[k].value; });
+      // the attendance figures are only sent when changed, so saving some other change does not turn them into hand-set ones
+      if (f.absent_days.value !== String(l.absent_days)) patch.absent_days = f.absent_days.value;
+      if (f.late_deduction.value !== String(l.late_deduction)) patch.late_deduction = f.late_deduction.value;
       try { await call("payroll.linesUpdate", patch); m.close(); toast("Payslip updated."); load(); }
       catch (err) { const x = m.el.querySelector("#m-msg"); x.textContent = err.message; x.hidden = false; x.scrollIntoView({ block: "nearest" }); }
     });
@@ -197,8 +207,8 @@ async function run({ role, content }) {
       if (bad) toast(`${bad} employee${bad === 1 ? " has" : "s have"} no RSA PIN on record.`, "error");
     } else {
       downloadCsv(`payroll-register-${p}.csv`,
-        ["Employee No", "Name", "Job Title", "Days Worked", "Basic", "Housing", "Transport", "Utility", "Meal", "Bonus", "Performance Reward", "Gross Pay", "Employee Pension", "PAYE", "NHF", "HMO/Life", "Other Deduction", "Loan Repayment", "Penalty", "Penalty Reason", "Total Deductions", "Net Pay", "Employer Pension"],
-        L.map((l) => [l.employee_no, l.employee_name, l.job_title, l.days_worked, m(l.basic), m(l.housing), m(l.transport), m(l.utility), m(l.meal), m(l.bonus), m(l.perf_reward), m(l.gross_pay), m(l.pension_employee), m(l.paye), m(l.nhf), m(l.hmo), m(l.other_deduction), m(l.loan_repayment), m(l.penalty), l.penalty_reason, m(l.total_deductions), m(l.net_pay), m(l.pension_employer)]));
+        ["Employee No", "Name", "Job Title", "Days Worked", "Basic", "Housing", "Transport", "Utility", "Meal", "Bonus", "Performance Reward", "Gross Pay", "Employee Pension", "PAYE", "NHF", "HMO/Life", "Other Deduction", "Loan Repayment", "Penalty", "Penalty Reason", "Lateness Deduction", "No Clock-in Deduction", "Total Deductions", "Net Pay", "Employer Pension"],
+        L.map((l) => [l.employee_no, l.employee_name, l.job_title, l.days_worked, m(l.basic), m(l.housing), m(l.transport), m(l.utility), m(l.meal), m(l.bonus), m(l.perf_reward), m(l.gross_pay), m(l.pension_employee), m(l.paye), m(l.nhf), m(l.hmo), m(l.other_deduction), m(l.loan_repayment), m(l.penalty), l.penalty_reason, m(l.late_deduction), m(l.absence_deduction), m(l.total_deductions), m(l.net_pay), m(l.pension_employer)]));
     }
   }
 

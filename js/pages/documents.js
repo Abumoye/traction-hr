@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, toast, formatDate, tabBar, bindTabs } from "../ui.js";
 import { renderEmployeeDocuments, downloadDoc, openReviewDialog } from "../documents-ui.js";
@@ -34,12 +34,13 @@ async function run({ session, role, content }) {
   async function mineTab() {
     loading(panel);
     try {
-      const data = await call("docs.list", {});
+      await loadFast([["docs.list", {}]], ([data]) => {
       const need = data.checklist.filter((c) => c.state === "missing" || c.state === "rejected").length;
       panel.innerHTML = `<div class="card"><h2>My documents</h2>
         <p class="muted">${need ? `${need} required document${need === 1 ? " is" : "s are"} still needed.` : "Everything required is uploaded."} Upload each one; HR reviews it, and asks you to upload it again if something is wrong. You can upload documents but not delete them.</p>
         <div id="docs"></div></div>`;
-      renderEmployeeDocuments(panel.querySelector("#docs"), data, { mySelf: true, onChange: mineTab });
+      renderEmployeeDocuments(panel.querySelector("#docs"), data, { mySelf: true, onChange: mineTab });});
+
     } catch (err) { fail(err, "Could not load your documents."); }
   }
 

@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import {
   esc, openModal, confirmDialog, toast, formatDate, STATUS_LABELS, tabBar, bindTabs,
@@ -26,18 +26,27 @@ async function run({ session, role, content }) {
   const linked = !!session.user.employeeId;
   const params = new URLSearchParams(location.search);
 
-  let pendingCount = 0;
-  if (canApprove) {
-    try { pendingCount = (await call("leave.list", { status: "pending" })).filter((r) => r.can_decide).length; } catch (e) {}
-  }
   const tabs = [{ id: "mine", label: "My leave" }];
-  if (canApprove) tabs.push({ id: "approvals", label: isHr ? "All requests" : "Team requests", badge: pendingCount || "" });
+  if (canApprove) tabs.push({ id: "approvals", label: isHr ? "All requests" : "Team requests", badge: "" });
   if (canApprove) tabs.push({ id: "calendar", label: "Calendar" });
   let active = tabs.some((t) => t.id === params.get("tab")) ? params.get("tab") : "mine";
 
-  content.innerHTML = `<div id="tabs">${tabBar(tabs, active)}</div><div id="panel"></div>`;
+  content.innerHTML = `<div id="tabs"></div><div id="panel"></div>`;
   const panel = content.querySelector("#panel");
-  bindTabs(content.querySelector("#tabs"), (id) => { active = id; show(); });
+  function drawTabs() {
+    const bar = content.querySelector("#tabs");
+    bar.innerHTML = tabBar(tabs, active);
+    bindTabs(bar, (id) => { active = id; show(); });
+  }
+  drawTabs();
+  // the number of requests waiting is filled in when it arrives: it no longer holds up the page
+  if (canApprove) {
+    call("leave.list", { status: "pending" }, { quiet: true }).then((list) => {
+      const n = list.filter((r) => r.can_decide).length;
+      tabs[1].badge = n || "";
+      drawTabs();
+    }).catch(() => {});
+  }
 
   function show() {
     if (active === "mine") mineTab();
@@ -49,9 +58,8 @@ async function run({ session, role, content }) {
   async function mineTab() {
     loading(panel);
     try {
-      const [mine, types] = await Promise.all([call("leave.mine"), call("leaveTypes.list")]);
-      const employees = isHr ? await call("employees.list") : [];
-      renderMine(mine, types, employees);
+      await loadFast(isHr ? [["leave.mine", {}], ["leaveTypes.list", {}], ["employees.list", {}]] : [["leave.mine", {}], ["leaveTypes.list", {}]],
+        ([mine, types, employees]) => renderMine(mine, types, employees || []));
     } catch (err) {
       errorBox(panel, err instanceof ApiError ? err.message : "Could not load your leave.");
     }

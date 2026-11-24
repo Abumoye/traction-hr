@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, monthLabel, STATUS_LABELS, rowLinks } from "../ui.js";
 import { naira } from "../money.js";
@@ -9,7 +9,7 @@ if (page) run(page);
 async function run({ content }) {
   loading(content);
   try {
-    const r = await call("payslips.mine");
+    await loadFast([["payslips.mine", {}]], ([r]) => {
     if (!r.linked) {
       content.innerHTML = `<div class="card"><h2>Your login is not linked to an employee record</h2>
         <p class="muted">Ask HR to link it so your payslips can appear here.</p></div>`;
@@ -23,6 +23,7 @@ async function run({ content }) {
           <td><span class="badge ${esc(p.status)}">${esc(p.status === "paid" ? "Paid" : "Ready")}</span></td></tr>`).join("")}</tbody></table></div>`
       : `<div class="card empty">You have no payslips yet. They appear here after each month's payroll is approved.</div>`;
     rowLinks(content);
+    });
   } catch (err) {
     errorBox(content, err instanceof ApiError ? err.message : "Could not load your payslips.");
   }

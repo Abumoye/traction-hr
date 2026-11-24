@@ -44,8 +44,10 @@ async function run({ role, content }) {
         <div><h3>Deductions</h3>
           ${row("Staff pension contribution", p.pension_employee)}${row("Income tax (PAYE)", p.paye)}${row("HMO / life assurance", p.hmo)}${row("NHF", p.nhf)}
           ${row("Other deductions", p.other_deduction)}${row("Loan / salary advance repayment", p.loan_repayment)}${row("Penalty" + (p.penalty_reason ? " - " + p.penalty_reason : ""), p.penalty)}
+          ${p.late_deduction ? row("Lateness" + (p.late_hours ? " (" + p.late_hours + (p.late_hours === 1 ? " hour" : " hours") + ")" : ""), p.late_deduction) : ""}${p.absence_deduction ? row("No clock-in (" + p.absent_days + (p.absent_days === 1 ? " day" : " days") + ")", p.absence_deduction) : ""}
           ${row("Total deductions", p.total_deductions, "sub")}</div>
       </div>
+      ${p.attendance_note ? `<p class="slip-note"><strong>Attendance:</strong> ${esc(p.attendance_note)}. These come off before tax, so tax and pension are worked out on the pay earned.</p>` : ""}
       <div class="slip-net"><div><div class="muted">Net pay</div><div class="amt">${naira(p.net_pay)}</div></div><div style="max-width:420px;text-align:right">${esc(nairaInWords(p.net_pay))}</div></div>
       <div class="slip-sign"><div>Employer signature</div><div>Employee signature</div></div>
       <p class="slip-foot">This is a system generated payslip.</p>

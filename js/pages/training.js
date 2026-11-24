@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox, canManageStaff } from "../layout.js";
 import { esc, openModal, confirmDialog, toast, formatDate, tabBar, bindTabs, fileToBase64, saveBase64, todayLagos } from "../ui.js";
 
@@ -54,12 +54,13 @@ async function run({ role, content }) {
   async function mineTab() {
     loading(panel);
     try {
-      const r = await call("training.mine");
+      await loadFast([["training.mine", {}]], ([r]) => {
       if (!r.linked) { panel.innerHTML = `<div class="card"><h2>Your login is not linked to an employee record</h2><p class="muted">Ask HR to link it so your training can appear here.</p></div>`; return; }
       panel.innerHTML = `
         ${r.missing.length ? `<div class="alert alert-info"><strong>Training you still need to complete:</strong><ul style="margin:6px 0 0;padding-left:20px">${r.missing.map((m) => `<li>${esc(m.title)} - ${m.state === "expired" ? "expired, please renew" : "not done yet"}</li>`).join("")}</ul>Tell HR or your manager when you have completed it, with your certificate.</div>` : ""}
         ${recordsTable(r.records, false, false)}`;
-      wireTable(panel, mineTab);
+      wireTable(panel, mineTab);});
+
     } catch (err) { fail(err, "Could not load your training."); }
   }
 

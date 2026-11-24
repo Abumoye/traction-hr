@@ -1,4 +1,4 @@
-import { call, ApiError } from "../api.js";
+import { call, loadFast, ApiError } from "../api.js";
 import { initPage, loading, errorBox } from "../layout.js";
 import { esc, openModal, toast, formatDateTime } from "../ui.js";
 
@@ -11,7 +11,7 @@ async function run({ content }) {
   async function show() {
     loading(content);
     try {
-      const data = await call("announcements.list");
+      await loadFast([["announcements.list", {}]], ([data]) => {
       content.innerHTML = `<div class="toolbar"><span class="muted">${data.can_send ? "Everything HR has sent. Staff see only the announcements addressed to them." : "Announcements sent to you."}</span>
           ${data.can_send ? `<button class="btn spacer" id="new" type="button">New announcement</button>` : ""}</div>
         ${data.items.length ? data.items.map((a) => `<article class="card ann${a.id === highlight ? " ann-hl" : ""}" id="a-${esc(a.id)}">
@@ -23,6 +23,7 @@ async function run({ content }) {
       if (add) add.addEventListener("click", compose);
       const hl = highlight && content.querySelector(".ann-hl");
       if (hl) hl.scrollIntoView({ block: "center" });
+      });
     } catch (err) { errorBox(content, err instanceof ApiError ? err.message : "Could not load announcements."); }
   }
 
