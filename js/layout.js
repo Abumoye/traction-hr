@@ -21,6 +21,7 @@ const ICONS = {
   performance: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   advances: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M15 15h3"/>',
   documents: '<path d="M3 6h6l2 2h10v11H3z"/><path d="M8 13h8"/>',
+  emergency: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>',
   announcements: '<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15 9a4 4 0 010 6M17.500 6.500a8 8 0 010 11"/>',
   finance: '<path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.500 10v8M14.500 10v8M19 10v8M3 20h18"/>',
   staffFile: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><circle cx="12" cy="12.500" r="2.200"/><path d="M8.500 18c.5-2 2-3 3.500-3s3 1 3.500 3"/>',
@@ -38,6 +39,7 @@ const ALL = ["owner", "hr_admin", "manager", "accountant", "employee"];
 const NAV = [
   { id: "dashboard", label: "Dashboard", href: "dashboard.html", roles: ALL },
   { id: "announcements", label: "Announcements", href: "announcements.html", roles: ALL },
+  { id: "emergency", label: "Medical emergency", href: "emergency.html", roles: ALL },
   { id: "employees", label: "Employees", href: "employees.html", roles: ["owner", "hr_admin", "manager"] },
   { id: "profile", label: "My profile", href: "employee.html?me=1", roles: ["employee"] },
   { id: "departments", label: "Departments", href: "departments.html", roles: ["owner", "hr_admin"] },
@@ -101,6 +103,7 @@ export function initPage({ active, title }) {
       </aside>
       <div class="scrim" id="scrim"></div>
       <div class="main">
+        <div class="emergency-bar" id="emergency-bar" role="alert" aria-live="assertive" hidden></div>
         <header class="topbar">
           <button type="button" class="menu-btn" id="menu-btn" aria-label="Open menu">Menu</button>
           <h1>${esc(title)}</h1>
@@ -112,6 +115,7 @@ export function initPage({ active, title }) {
       </div>
     </div>`;
   document.title = title + " | Traction Outsourcing HR";
+  document.body.dataset.page = active;
 
   const shell = document.getElementById("shell");
   document.getElementById("menu-btn").addEventListener("click", () => shell.classList.toggle("nav-open"));

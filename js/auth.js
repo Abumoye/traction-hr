@@ -14,6 +14,14 @@ export function getToken() {
   return s ? s.token : null;
 }
 
+// The last answers a page was given (api.js loadFast) live under this prefix in sessionStorage.
+export const SAVED_PREFIX = "tol_saved:";
+
+export function clearSaved() {
+  try { Object.keys(sessionStorage).filter((k) => k.startsWith(SAVED_PREFIX)).forEach((k) => sessionStorage.removeItem(k)); } catch (e) {}
+}
+
 export function clearSession() {
-  try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+  try { sessionStorage.removeItem(SESSION_KEY); sessionStorage.removeItem("tol_em"); sessionStorage.removeItem("tol_bell"); } catch (e) {}
+  clearSaved();
 }

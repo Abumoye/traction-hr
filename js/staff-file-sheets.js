@@ -90,14 +90,19 @@ export function staffFileSheets(f) {
 
   const pay = f.pay;
   sheets.push({ name: "Pay", rows: [["Salary from", "Monthly gross (NGN)", "Annual rent (NGN)", "Set by"], ...pay.salary.map((x) => [x.effective_from, x.monthly_gross, x.annual_rent, x.set_by]), [],
-    ["Year", "Months paid", "Gross (NGN)", "Net (NGN)", "PAYE (NGN)"], ...pay.payslips.by_year.map((y) => [y.year, y.months, y.gross, y.net, y.paye]),
-    ["All years", pay.payslips.count, pay.payslips.gross, pay.payslips.net, pay.payslips.paye], [],
+    ["Year", "Months paid", "Gross (NGN)", "Net (NGN)", "PAYE (NGN)", "Lost to lateness and no clock-in (NGN)"], ...pay.payslips.by_year.map((y) => [y.year, y.months, y.gross, y.net, y.paye, y.attendance]),
+    ["All years", pay.payslips.count, pay.payslips.gross, pay.payslips.net, pay.payslips.paye, pay.payslips.attendance], [],
     ["Salary advance requested", "Amount (NGN)", "Repay over (months)", "Status", "Paid out on", "Repaid so far (NGN)", "Balance (NGN)", "Reason"],
     ...pay.advances.map((x) => [(x.requested_at || "").slice(0, 10), x.amount, x.repay_months, cap(x.status), x.disbursed_on, x.repaid_total, x.balance, x.reason]), [],
     ["Expense claims", "Count", "Claimed (NGN)", "Paid (NGN)", "Waiting (NGN)", "Rejected (NGN)"], ["All claims", pay.expenses.count, pay.expenses.claimed, pay.expenses.paid, pay.expenses.pending, pay.expenses.rejected]] });
-  sheets.push({ name: "Payslips", rows: [["Month", "Gross (NGN)", "Net (NGN)", "PAYE (NGN)", "Employee pension (NGN)", "Total deductions (NGN)", "Days worked", "Run status"],
-    ...pay.payslips.list.map((x) => [x.period, x.gross, x.net, x.paye, x.pension_employee, x.deductions, x.days_worked, cap(x.run_status)])] });
+  sheets.push({ name: "Payslips", rows: [["Month", "Gross (NGN)", "Net (NGN)", "PAYE (NGN)", "Employee pension (NGN)", "Total deductions (NGN)", "Lateness and no clock-in (NGN)", "Why", "Days worked", "Run status"],
+    ...pay.payslips.list.map((x) => [x.period, x.gross, x.net, x.paye, x.pension_employee, x.deductions, x.attendance, x.attendance_note, x.days_worked, cap(x.run_status)])] });
 
+  const em = f.emergency || { sent: [], received: [] };
+  const emRows = [];
+  for (const m of em.sent) for (const p of m.recipients) emRows.push(["Sent by this person", (m.created_at || "").replace("T", " ").slice(0, 16), p.name + " (" + p.kind + ")", m.message, m.location, (p.seen_at || "").replace("T", " ").slice(0, 16), cap(p.response) || "Still waiting", (p.responded_at || "").replace("T", " ").slice(0, 16)]);
+  for (const x of em.received) emRows.push(["Sent to this person", (x.sent_at || "").replace("T", " ").slice(0, 16), x.from, x.message, x.location, (x.seen_at || "").replace("T", " ").slice(0, 16), cap(x.response) || "Still waiting", (x.responded_at || "").replace("T", " ").slice(0, 16)]);
+  sheets.push({ name: "Medical emergency", rows: [["Direction", "Sent", "Person told / sent by", "Message", "Where", "Received (first on screen)", "Chose", "Chose at"], ...emRows] });
   sheets.push({ name: "HR records", rows: [["Date", "Type", "Title", "Details", "Recorded by", "Voided", "Reason voided"],
     ...f.hr_records.map((x) => [x.date, RECORD_LABELS[x.kind] || x.kind, x.title, x.details, x.recorded_by, x.voided ? "Yes" : "", x.void_reason])] });
   return sheets;

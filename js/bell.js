@@ -1,9 +1,10 @@
 // The bell in the top bar: a number for unread notifications, refreshed quietly (no loading bar) while the page is open.
 import { call } from "./api.js";
 import { toast } from "./ui.js";
+import { setEmergency, recallEmergency } from "./emergency-bar.js";
 import { registerWorker, pushState, enablePush, dismissedRecently, dismissPrompt, syncDevice } from "./push.js";
 
-const POLL_MS = 120000;
+const POLL_MS = 60000; // each check also brings any medical emergency message waiting for this person
 const KEY = "tol_bell";
 
 export function setBellCount(n) {
@@ -30,6 +31,7 @@ export function startBell() {
     try {
       const r = await call("notifications.count", {}, { quiet: true });
       setBellCount(r.unread);
+      setEmergency(r.emergency || []);
       const before = remembered();
       const id = r.latest ? r.latest.id : "";
       // a short message when something new arrives while the page is open (not for what was already waiting at sign-in)
@@ -37,7 +39,11 @@ export function startBell() {
       remember({ id, unread: r.unread });
     } catch (e) { /* the bell keeps its last number; the next poll tries again */ }
   }
-  poll();
+  // the number from the last page is shown at once; the first check waits a moment so the page's own data is not held up behind it
+  const last = remembered();
+  if (last) setBellCount(last.unread);
+  setEmergency(recallEmergency());                       // an emergency message still waiting is on screen from the first moment
+  setTimeout(poll, 4000);
   setInterval(poll, POLL_MS);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") poll(); });
 }
