@@ -517,3 +517,27 @@ tr.neg td { background: var(--danger-soft); }
 .phone-card .action-row { margin-top: 12px; }
 @media (max-width: 720px) { .push-bar { padding: 12px 16px; } }
 
+
+/* ---- Medical emergency ---- */
+.emergency-bar { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; padding: 14px 28px; background: #b3261e; color: #fff; border-bottom: 3px solid #7f1a15; }
+.emergency-bar[hidden] { display: none; }
+.emergency-bar .em-main { flex: 1; min-width: 240px; }
+.emergency-bar strong { font-size: 16px; letter-spacing: 0.02em; }
+.emergency-bar .em-time { opacity: 0.85; font-size: 13px; margin-left: 8px; }
+.emergency-bar p { margin: 4px 0 0; font-size: 15px; word-break: break-word; }
+.emergency-bar small { display: block; margin-top: 4px; opacity: 0.9; }
+.emergency-bar .em-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.emergency-bar .btn { background: #fff; color: #7f1a15; border-color: #fff; }
+.emergency-bar .btn.btn-ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.7); }
+.emergency-bar .em-open { color: #fff; text-decoration: underline; font-size: 14px; }
+.em-card { border-left: 6px solid #b3261e; background: #fff5f4; }
+.em-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: #7f1a15; }
+.em-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.em-sent { border-top: 1px solid var(--line); padding-top: 14px; margin-top: 14px; }
+.em-sent:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.em-sent p { margin: 6px 0 10px; }
+@media (max-width: 720px) { .emergency-bar { padding: 12px 16px; } }
+.slip-note { font-size: 13px; color: var(--ink-soft); margin: 14px 0 0; padding: 10px 12px; background: var(--ground); border-radius: 8px; }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 16px; margin-top: 6px; }
+@media print { .slip-note { background: none; border: 1px solid #ccc; } }
+.emergency-bar .em-time { white-space: nowrap; }
