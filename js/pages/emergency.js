@@ -5,7 +5,8 @@ import { esc, formatDateTime, toast, setBusy } from "../ui.js";
 const page = initPage({ active: "emergency", title: "Medical emergency" });
 if (page) run(page);
 
-const ROLE = { manager: "Manager", hr: "HR manager", owner: "Owner", hr_admin: "HR manager" };
+const ROLE = { manager: "Manager", hr: "HR manager", owner: "Owner", hr_admin: "HR manager", chosen: "Chosen by the sender", everyone: "Everyone" };
+const ROLE_LABEL = { manager: "Manager", hr_admin: "HR manager", owner: "Owner" };
 const when = (iso) => (iso ? formatDateTime(iso) : "");
 
 async function run({ content }) {
@@ -35,6 +36,9 @@ async function run({ content }) {
         <fieldset class="field"><legend>Who should be told?</legend>
           <label class="check"><input type="checkbox" name="toManager" checked> ${managerText}</label>
           <label class="check"><input type="checkbox" name="toHr" checked> ${hrText}</label>
+          ${r.can_choose ? `<details class="em-more"><summary>Also tell other managers (${r.people.length} to choose from)</summary>
+            <div class="check-grid">${r.people.map((p) => `<label class="check"><input type="checkbox" name="toPeople" value="${esc(p.id)}"> ${esc(p.name)} <span class="muted">(${esc(ROLE_LABEL[p.role] || p.role)}${p.title ? ", " + esc(p.title) : ""})</span></label>`).join("")}</div></details>
+          <label class="check"><input type="checkbox" name="toAll"> <strong>Everyone in the organization</strong> <span class="muted">(${r.everyone_count} ${r.everyone_count === 1 ? "person" : "people"})</span></label>` : ""}
         </fieldset>
         <button type="submit" class="btn btn-danger" id="send-btn">Send emergency message</button>
       </form>
@@ -84,6 +88,9 @@ async function run({ content }) {
   }
 
   draw(data);
+  // telling everyone makes the other choices pointless: grey them out while it is ticked
+  const allBox = content.querySelector("input[name=toAll]");
+  if (allBox) allBox.addEventListener("change", () => { content.querySelectorAll("#send-form input[name=toManager], #send-form input[name=toHr], #send-form input[name=toPeople]").forEach((i) => { i.disabled = allBox.checked; }); });
 
   // what the people told have done shows up here without reloading the page
   setInterval(() => { if (document.visibilityState === "visible" && !content.querySelector("#em-msg:focus")) refresh(); }, 30000);
@@ -94,14 +101,18 @@ async function run({ content }) {
     msg.hidden = true;
     const btn = content.querySelector("#send-btn");
     const body = { message: form.message.value, location: form.location.value, toManager: form.toManager.checked, toHr: form.toHr.checked };
-    if (!body.toManager && !body.toHr) { msg.textContent = "Choose who to tell: your manager, HR, or both."; msg.hidden = false; return; }
+    if (r.can_choose) {
+      body.toAll = !!(form.toAll && form.toAll.checked);
+      body.toPeople = [...form.querySelectorAll("input[name=toPeople]:checked")].map((i) => i.value);
+    }
+    if (!body.toManager && !body.toHr && !body.toAll && !(body.toPeople || []).length) { msg.textContent = "Choose who to tell: your manager, HR, or both."; msg.hidden = false; return; }
     if (body.message.trim().length < 5) { msg.textContent = "Say what is happening, in a few words at least."; msg.hidden = false; return; }
     setBusy(btn, true, "Sending...");
     try {
       const r2 = await call("emergency.send", body);
       form.message.value = "";
       okBox.hidden = false;
-      okBox.innerHTML = `<div class="alert alert-ok" role="status"><strong>Sent.</strong> ${r2.recipients.map((p) => esc(p.name)).join(" and ")} ${r2.recipients.length === 1 ? "has" : "have"} been told.
+      okBox.innerHTML = `<div class="alert alert-ok" role="status"><strong>Sent.</strong> ${r2.recipients.length > 6 ? `${r2.recipients.length} people` : r2.recipients.map((p) => esc(p.name)).join(" and ")} ${r2.recipients.length === 1 ? "has" : "have"} been told.
         ${r2.notes.map((n) => `<div>${esc(n)}</div>`).join("")}<div class="muted">This page shows when they have seen it and what they chose.</div></div>`;
       refresh();
     } catch (err) {
