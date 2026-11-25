@@ -20,7 +20,7 @@ function table(head, rows, empty) {
 const section = (title, body, note = "", actions = "") => `<section class="card sf-card"><div class="sf-card-head"><h2>${esc(title)}</h2>${actions}</div>${note ? `<p class="muted sf-note">${note}</p>` : ""}${body}</section>`;
 const tile = (num, lbl, tone = "") => `<div class="stat ${tone}"><div class="num">${esc(num)}</div><div class="lbl">${esc(lbl)}</div></div>`;
 const chips = (items, cap_ = 0) => items.length ? `<div class="sf-chips">${items.map((x) => `<span>${esc(d(x))}</span>`).join("")}</div>${cap_ && items.length >= cap_ ? `<p class="muted sf-note">Only the most recent ${cap_} are listed here. The Excel download lists them all.</p>` : ""}` : "";
-const ROLE_NAMES = { manager: "Manager", hr: "HR manager", owner: "Owner" };
+const ROLE_NAMES = { manager: "Manager", hr: "HR manager", owner: "Owner", chosen: "Chosen by the sender", everyone: "Everyone" };
 const badge = (cls, text) => `<span class="badge ${esc(cls)}">${esc(text)}</span>`;
 
 async function run({ role, content }) {
